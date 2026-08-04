@@ -1,8 +1,14 @@
-import type { HealthResponse, MorningCheckinResponse } from "@/lib/api/types";
+import type {
+  HealthResponse,
+  MorningCheckinResponse,
+  SaveMorningCheckinAnswerRequest,
+} from "@/lib/api/types";
 
 export interface PersonalJournalApiClient {
   getHealth(): Promise<HealthResponse>;
   getOrCreateMorningCheckin(browserDate: string): Promise<MorningCheckinResponse>;
+  saveMorningCheckinAnswer(checkinId: string, payload: SaveMorningCheckinAnswerRequest): Promise<MorningCheckinResponse>;
+  restartMorningCheckin(checkinId: string): Promise<MorningCheckinResponse>;
 }
 
 type HttpClientOptions = {
@@ -10,11 +16,28 @@ type HttpClientOptions = {
   fetchImpl?: typeof fetch;
 };
 
-function parseJson<T>(response: Response): Promise<T> {
+async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    throw new Error(`API request failed with status ${response.status}`);
+    let message = `API request failed with status ${response.status}`;
+    try {
+      const payload = (await response.json()) as { detail?: unknown };
+      if (typeof payload.detail === "string" && payload.detail.length > 0) {
+        message = payload.detail;
+      } else if (Array.isArray(payload.detail) && payload.detail.length > 0) {
+        const first = payload.detail[0];
+        if (first && typeof first === "object" && "msg" in first) {
+          const firstMessage = (first as { msg?: unknown }).msg;
+          if (typeof firstMessage === "string" && firstMessage.length > 0) {
+            message = firstMessage;
+          }
+        }
+      }
+    } catch {
+      // Keep default status-based message when error payload is not JSON.
+    }
+    throw new Error(message);
   }
-  return response.json() as Promise<T>;
+  return (await response.json()) as T;
 }
 
 export function createHttpPersonalJournalApiClient(
@@ -32,6 +55,22 @@ export function createHttpPersonalJournalApiClient(
       const params = new URLSearchParams({ browser_date: browserDate });
       const response = await fetchImpl(`${baseUrl}/api/morning-checkin?${params.toString()}`, {
         method: "PUT",
+      });
+      return parseJson<MorningCheckinResponse>(response);
+    },
+    async saveMorningCheckinAnswer(checkinId: string, payload: SaveMorningCheckinAnswerRequest) {
+      const response = await fetchImpl(`${baseUrl}/api/morning-checkin/${checkinId}/answers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return parseJson<MorningCheckinResponse>(response);
+    },
+    async restartMorningCheckin(checkinId: string) {
+      const response = await fetchImpl(`${baseUrl}/api/morning-checkin/${checkinId}/restart`, {
+        method: "POST",
       });
       return parseJson<MorningCheckinResponse>(response);
     },
