@@ -9,6 +9,7 @@ export interface PersonalJournalApiClient {
   getOrCreateMorningCheckin(browserDate: string): Promise<MorningCheckinResponse>;
   saveMorningCheckinAnswer(checkinId: string, payload: SaveMorningCheckinAnswerRequest): Promise<MorningCheckinResponse>;
   restartMorningCheckin(checkinId: string): Promise<MorningCheckinResponse>;
+  completeMorningCheckin(checkinId: string): Promise<MorningCheckinResponse>;
 }
 
 type HttpClientOptions = {
@@ -70,6 +71,12 @@ export function createHttpPersonalJournalApiClient(
     },
     async restartMorningCheckin(checkinId: string) {
       const response = await fetchImpl(`${baseUrl}/api/morning-checkin/${checkinId}/restart`, {
+        method: "POST",
+      });
+      return parseJson<MorningCheckinResponse>(response);
+    },
+    async completeMorningCheckin(checkinId: string) {
+      const response = await fetchImpl(`${baseUrl}/api/morning-checkin/${checkinId}/complete`, {
         method: "POST",
       });
       return parseJson<MorningCheckinResponse>(response);

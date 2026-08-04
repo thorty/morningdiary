@@ -59,6 +59,7 @@ export function HomeScreen({
   const [isStarting, setIsStarting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [questionError, setQuestionError] = useState<string | null>(null);
 
@@ -114,7 +115,7 @@ export function HomeScreen({
       setCurrentQuestionNumber(checkin.next_question_number);
       setSecondsRemaining(breathingDurationSeconds);
       setQuestionError(null);
-      setViewState("breathing");
+      setViewState(checkin.status === "completed" ? "questionnaire" : "breathing");
     } catch {
       setStartError("Der Morning Check-in konnte gerade nicht gestartet werden.");
     } finally {
@@ -171,6 +172,17 @@ export function HomeScreen({
       });
       setActiveCheckin(updatedCheckin);
       setCurrentQuestionNumber(updatedCheckin.next_question_number);
+
+      if (updatedCheckin.next_question_number === null) {
+        setIsCompleting(true);
+        try {
+          const completedCheckin = await apiClient.completeMorningCheckin(updatedCheckin.id);
+          setActiveCheckin(completedCheckin);
+          setCurrentQuestionNumber(completedCheckin.next_question_number);
+        } finally {
+          setIsCompleting(false);
+        }
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Die Antwort konnte nicht gespeichert werden.";
       setQuestionError(message);
@@ -205,6 +217,7 @@ export function HomeScreen({
   const progressLabel = currentQuestionNumber === null ? "Fragen abgeschlossen" : `Frage ${currentQuestionNumber} von ${QUESTION_COUNT}`;
   const currentPrompt =
     currentQuestionNumber === null ? "Alle sechs Fragen wurden bereits eingereicht." : QUESTIONS[currentQuestionNumber - 1];
+  const isCompletedSnapshot = activeCheckin?.status === "completed";
 
   return (
     <main>
@@ -246,9 +259,26 @@ export function HomeScreen({
           {viewState === "questionnaire" ? (
             <div className="question-card">
               <h3>{progressLabel}</h3>
-              <p>{currentPrompt}</p>
+              {isCompletedSnapshot ? (
+                <p>Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.</p>
+              ) : (
+                <p>{currentPrompt}</p>
+              )}
 
-              {currentQuestionNumber !== null ? (
+              {isCompletedSnapshot ? (
+                <div>
+                  <p>Tagesdatum: {activeCheckin.browser_date}</p>
+                  <p>Stimmung: {activeCheckin.answers[0] ?? "Nicht angegeben"}</p>
+                  <p>Antworten:</p>
+                  <ol>
+                    {activeCheckin.answers.map((answer, index) => (
+                      <li key={index + 1}>{answer ?? "(leer)"}</li>
+                    ))}
+                  </ol>
+                </div>
+              ) : null}
+
+              {currentQuestionNumber !== null && !isCompletedSnapshot ? (
                 <>
                   <label htmlFor="question-input">
                     {currentQuestionNumber === 1
@@ -270,9 +300,12 @@ export function HomeScreen({
                 </>
               ) : null}
 
-              <button type="button" onClick={() => void restartCheckin()} disabled={isRestarting}>
-                {isRestarting ? "Starte neu..." : "Morning Check-in neu starten"}
-              </button>
+              {!isCompletedSnapshot ? (
+                <button type="button" onClick={() => void restartCheckin()} disabled={isRestarting || isCompleting}>
+                  {isRestarting ? "Starte neu..." : "Morning Check-in neu starten"}
+                </button>
+              ) : null}
+              {isCompleting ? <p className="status">Daily Snapshot wird abgeschlossen...</p> : null}
               {questionError ? <p className="status">{questionError}</p> : null}
             </div>
           ) : null}

@@ -28,6 +28,13 @@ function makeMockClient(overrides: Partial<PersonalJournalApiClient> = {}): Pers
       answers: [null, null, null, null, null, null],
       next_question_number: 1,
     }),
+    completeMorningCheckin: async () => ({
+      id: "abc",
+      browser_date: "2026-08-04",
+      status: "completed",
+      answers: [null, null, null, null, null, null],
+      next_question_number: null,
+    }),
     ...overrides,
   };
 }
@@ -269,4 +276,122 @@ test("restarts unfinished check-in and resets to question one", async () => {
     expect(restartMorningCheckin).toHaveBeenCalledWith("checkin-1");
   });
   expect(screen.getByRole("heading", { name: "Frage 1 von 6", level: 3 })).toBeInTheDocument();
+});
+
+test("renders immutable completed daily snapshot when resumed as completed", async () => {
+  render(
+    <HomeScreen
+      apiClient={
+        makeMockClient({
+          getOrCreateMorningCheckin: async () => ({
+            id: "checkin-1",
+            browser_date: "2026-08-04",
+            status: "completed",
+            answers: [3, "Dankbar", null, "Energie", null, null],
+            next_question_number: null,
+          }),
+        })
+      }
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Morning Check-in starten" }));
+  await waitFor(() => {
+    expect(screen.getByText("Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.")).toBeInTheDocument();
+  });
+
+  expect(screen.getByText("Tagesdatum: 2026-08-04")).toBeInTheDocument();
+  expect(screen.getByText("Stimmung: 3")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Morning Check-in neu starten" })).not.toBeInTheDocument();
+});
+
+test("completes a blank check-in and renders completed daily snapshot", async () => {
+  const saveMorningCheckinAnswer = vi
+    .fn<PersonalJournalApiClient["saveMorningCheckinAnswer"]>()
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [null, null, null, null, null, null],
+      next_question_number: 2,
+    })
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [null, null, null, null, null, null],
+      next_question_number: 3,
+    })
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [null, null, null, null, null, null],
+      next_question_number: 4,
+    })
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [null, null, null, null, null, null],
+      next_question_number: 5,
+    })
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [null, null, null, null, null, null],
+      next_question_number: 6,
+    })
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [null, null, null, null, null, null],
+      next_question_number: null,
+    });
+  const completeMorningCheckin = vi.fn<PersonalJournalApiClient["completeMorningCheckin"]>().mockResolvedValue({
+    id: "checkin-1",
+    browser_date: "2026-08-04",
+    status: "completed",
+    answers: [null, null, null, null, null, null],
+    next_question_number: null,
+  });
+
+  render(
+    <HomeScreen
+      apiClient={
+        makeMockClient({
+          getOrCreateMorningCheckin: async () => ({
+            id: "checkin-1",
+            browser_date: "2026-08-04",
+            status: "unfinished",
+            answers: [null, null, null, null, null, null],
+            next_question_number: 1,
+          }),
+          saveMorningCheckinAnswer,
+          completeMorningCheckin,
+        })
+      }
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Morning Check-in starten" }));
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Atemuebung ueberspringen" })).toBeInTheDocument();
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Atemuebung ueberspringen" }));
+
+  for (let index = 0; index < 6; index += 1) {
+    fireEvent.click(screen.getByRole("button", { name: /Antwort speichern/ }));
+    await waitFor(() => {
+      expect(saveMorningCheckinAnswer).toHaveBeenCalledTimes(index + 1);
+    });
+  }
+
+  await waitFor(() => {
+    expect(completeMorningCheckin).toHaveBeenCalledWith("checkin-1");
+  });
+  expect(screen.getByText("Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.")).toBeInTheDocument();
+  expect(screen.getByText("Stimmung: Nicht angegeben")).toBeInTheDocument();
 });

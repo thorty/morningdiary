@@ -24,6 +24,10 @@ class InvalidMorningCheckinStateError(Exception):
     pass
 
 
+class MorningCheckinNotReadyForCompletionError(Exception):
+    pass
+
+
 QUESTION_COUNT = 6
 
 
@@ -41,8 +45,15 @@ class PersonalJournalStore:
         self._db = TinyDB(db_path)
         self._table = self._db.table("morning_checkins")
 
-    def get_or_create_unfinished_morning_checkin(self, browser_date: date) -> MorningCheckinRecord:
+    def get_or_create_morning_checkin_for_date(self, browser_date: date) -> MorningCheckinRecord:
         query = Query()
+        existing_completed = cast(
+            dict[str, Any] | None,
+            self._table.get((query.browser_date == browser_date.isoformat()) & (query.status == "completed")),
+        )
+        if existing_completed is not None:
+            return self._to_record(existing_completed)
+
         existing = cast(
             dict[str, Any] | None,
             self._table.get((query.browser_date == browser_date.isoformat()) & (query.status == "unfinished")),
@@ -74,8 +85,10 @@ class PersonalJournalStore:
         if existing["status"] != "unfinished":
             raise InvalidMorningCheckinStateError
 
-        answers = cast(list[int | str | None], list(existing["answers"]))
+        answers = cast(list[int | str | None], list(existing.get("answers", _default_answers())))
         answered_questions = cast(list[int], list(existing.get("answered_questions", [])))
+        if not answered_questions:
+            answered_questions = [index for index, existing_answer in enumerate(answers, start=1) if existing_answer is not None]
 
         if question_number not in answered_questions:
             answered_questions.append(question_number)
@@ -111,6 +124,40 @@ class PersonalJournalStore:
                 "answers": _default_answers(),
                 "answered_questions": _default_answered_questions(),
                 "next_question_number": 1,
+            },
+            Query().id == checkin_id,
+        )
+
+        updated = self._get_by_id(checkin_id)
+        if updated is None:
+            raise MorningCheckinNotFoundError
+        return self._to_record(updated)
+
+    def complete_checkin(self, checkin_id: str) -> MorningCheckinRecord:
+        existing = self._get_by_id(checkin_id)
+        if existing is None:
+            raise MorningCheckinNotFoundError
+
+        if existing["status"] == "completed":
+            return self._to_record(existing)
+
+        query = Query()
+        browser_date_iso = cast(str, existing["browser_date"])
+        already_completed = cast(
+            dict[str, Any] | None,
+            self._table.get((query.browser_date == browser_date_iso) & (query.status == "completed")),
+        )
+        if already_completed is not None:
+            return self._to_record(already_completed)
+
+        next_question_number = cast(int | None, existing.get("next_question_number"))
+        if next_question_number is not None:
+            raise MorningCheckinNotReadyForCompletionError
+
+        self._table.update(
+            {
+                "status": "completed",
+                "next_question_number": None,
             },
             Query().id == checkin_id,
         )

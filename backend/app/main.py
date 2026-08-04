@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import Settings
 from app.db import (
     InvalidMorningCheckinStateError,
+    MorningCheckinNotReadyForCompletionError,
     MorningCheckinNotFoundError,
     PersonalJournalStore,
 )
@@ -33,7 +34,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.put("/api/morning-checkin", response_model=MorningCheckinResponse)
     def get_or_create_morning_checkin(browser_date: date) -> MorningCheckinResponse:
-        checkin = store.get_or_create_unfinished_morning_checkin(browser_date)
+        checkin = store.get_or_create_morning_checkin_for_date(browser_date)
         return MorningCheckinResponse(**checkin)
 
     @app.post("/api/morning-checkin/{checkin_id}/answers", response_model=MorningCheckinResponse)
@@ -63,6 +64,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(
                 status_code=409,
                 detail="Ein abgeschlossener Morning Check-in kann nicht neu gestartet werden.",
+            ) from exc
+
+        return MorningCheckinResponse(**checkin)
+
+    @app.post("/api/morning-checkin/{checkin_id}/complete", response_model=MorningCheckinResponse)
+    def complete_morning_checkin(checkin_id: str) -> MorningCheckinResponse:
+        try:
+            checkin = store.complete_checkin(checkin_id)
+        except MorningCheckinNotFoundError as exc:
+            raise HTTPException(status_code=404, detail="Morning Check-in wurde nicht gefunden.") from exc
+        except MorningCheckinNotReadyForCompletionError as exc:
+            raise HTTPException(
+                status_code=409,
+                detail="Bitte beantworte zuerst alle sechs Fragen, bevor du abschliesst.",
             ) from exc
 
         return MorningCheckinResponse(**checkin)
