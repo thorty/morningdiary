@@ -39,6 +39,7 @@ function makeMockClient(overrides: Partial<PersonalJournalApiClient> = {}): Pers
       next_question_number: null,
       coach_summary: null,
     }),
+    listPersonalJournalSnapshots: async () => [],
     ...overrides,
   };
 }
@@ -544,4 +545,52 @@ test("renders generated coach summary after completing final answer", async () =
     expect(completeMorningCheckin).toHaveBeenCalledWith("checkin-1");
   });
   expect(screen.getByText("Du startest klar und freundlich in den Tag.")).toBeInTheDocument();
+});
+
+test("renders personal journal snapshots newest first with and without summary", async () => {
+  render(
+    <HomeScreen
+      apiClient={
+        makeMockClient({
+          listPersonalJournalSnapshots: async () => [
+            {
+              id: "snapshot-2",
+              browser_date: "2026-08-05",
+              status: "completed",
+              answers: [4, "Dankbar", null, "Energie", null, null],
+              next_question_number: null,
+              coach_summary: "Du bleibst auf einem guten Weg.",
+            },
+            {
+              id: "snapshot-1",
+              browser_date: "2026-08-04",
+              status: "completed",
+              answers: [null, "Only a short answer", null, null, null, null],
+              next_question_number: null,
+              coach_summary: null,
+            },
+          ],
+        })
+      }
+    />,
+  );
+
+  await waitFor(() => {
+    expect(screen.getByText("Daily Snapshot vom 2026-08-05")).toBeInTheDocument();
+  });
+  expect(screen.getByText("Daily Snapshot vom 2026-08-04")).toBeInTheDocument();
+  expect(screen.getByText("Stimmung: 4")).toBeInTheDocument();
+  expect(screen.getByText("Stimmung: Nicht angegeben")).toBeInTheDocument();
+  expect(screen.getByText("Only a short answer")).toBeInTheDocument();
+  expect(screen.getByText("Du bleibst auf einem guten Weg.")).toBeInTheDocument();
+  expect(screen.getByText("Keine Coach Summary vorhanden.")).toBeInTheDocument();
+
+  const headings = screen.getAllByRole("heading", { level: 3 });
+  const journalHeadings = headings.filter((heading) =>
+    heading.textContent?.startsWith("Daily Snapshot vom "),
+  );
+  expect(journalHeadings.map((heading) => heading.textContent)).toEqual([
+    "Daily Snapshot vom 2026-08-05",
+    "Daily Snapshot vom 2026-08-04",
+  ]);
 });

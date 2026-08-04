@@ -62,6 +62,8 @@ export function HomeScreen({
   const [isCompleting, setIsCompleting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [questionError, setQuestionError] = useState<string | null>(null);
+  const [journalSnapshots, setJournalSnapshots] = useState<MorningCheckinResponse[]>([]);
+  const [journalError, setJournalError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -75,6 +77,26 @@ export function HomeScreen({
       .catch(() => {
         if (isMounted) {
           setServiceStatus("Journal-Service momentan nicht erreichbar.");
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [apiClient]);
+
+  useEffect(() => {
+    let isMounted = true;
+    void apiClient
+      .listPersonalJournalSnapshots()
+      .then((snapshots) => {
+        if (isMounted) {
+          setJournalSnapshots(snapshots);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setJournalError("Die Personal Journal Eintraege konnten nicht geladen werden.");
         }
       });
 
@@ -319,7 +341,23 @@ export function HomeScreen({
 
         <section className="section" aria-label="Personal Journal">
           <h2>Personal Journal</h2>
-          <p>Hier siehst du spaeter deine Daily Snapshots in neuer Reihenfolge zuerst.</p>
+          {journalSnapshots.length === 0 && !journalError ? <p>Noch keine Daily Snapshots vorhanden.</p> : null}
+          {journalError ? <p className="status">{journalError}</p> : null}
+          {journalSnapshots.map((snapshot) => (
+            <article key={snapshot.id} className="question-card">
+              <h3>Daily Snapshot vom {snapshot.browser_date}</h3>
+              <p>
+                Stimmung: {snapshot.answers[0] === null || snapshot.answers[0] === undefined ? "Nicht angegeben" : snapshot.answers[0]}
+              </p>
+              <p>{snapshot.coach_summary ?? "Keine Coach Summary vorhanden."}</p>
+              <p>Antworten:</p>
+              <ol>
+                {snapshot.answers.map((answer, index) => (
+                  <li key={`${snapshot.id}-${index + 1}`}>{answer ?? "(leer)"}</li>
+                ))}
+              </ol>
+            </article>
+          ))}
         </section>
 
         <p className="status" role="status">

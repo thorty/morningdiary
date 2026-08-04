@@ -154,3 +154,41 @@ test("completes a check-in through backend boundary", async () => {
   expect(response.next_question_number).toBeNull();
   expect(response.coach_summary).toBe("Du bist auf einem guten Weg.");
 });
+
+test("lists completed personal journal snapshots newest first", async () => {
+  const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+    new Response(
+      JSON.stringify([
+        {
+          id: "snapshot-2",
+          browser_date: "2026-08-05",
+          status: "completed",
+          answers: [5, "Dankbar", null, null, null, null],
+          next_question_number: null,
+          coach_summary: "Du bleibst fokussiert.",
+        },
+        {
+          id: "snapshot-1",
+          browser_date: "2026-08-04",
+          status: "completed",
+          answers: [null, null, null, null, null, null],
+          next_question_number: null,
+          coach_summary: null,
+        },
+      ]),
+      { status: 200 },
+    ),
+  );
+
+  const client = createHttpPersonalJournalApiClient({
+    baseUrl: "http://localhost:8000",
+    fetchImpl: fetchMock,
+  });
+
+  const response = await client.listPersonalJournalSnapshots();
+
+  expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/personal-journal/snapshots", {
+    method: "GET",
+  });
+  expect(response.map((item) => item.browser_date)).toEqual(["2026-08-05", "2026-08-04"]);
+});

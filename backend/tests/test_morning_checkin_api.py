@@ -587,3 +587,51 @@ def test_non_blank_completion_without_configured_generator_uses_fallback_note(tm
 
     assert response.status_code == 200
     assert response.json()["coach_summary"] == "Deine Zusammenfassung konnte heute nicht erstellt werden."
+
+
+def test_personal_journal_returns_completed_snapshots_newest_first(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+
+    checkin_one = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    checkin_two = client.put("/api/morning-checkin", params={"browser_date": "2026-07-25"}).json()
+
+    for question_number in range(1, 7):
+        client.post(
+            f"/api/morning-checkin/{checkin_one['id']}/answers",
+            json={"question_number": question_number, "answer": None},
+        )
+        client.post(
+            f"/api/morning-checkin/{checkin_two['id']}/answers",
+            json={"question_number": question_number, "answer": None if question_number != 2 else "Dankbar"},
+        )
+
+    client.post(f"/api/morning-checkin/{checkin_one['id']}/complete")
+    client.post(f"/api/morning-checkin/{checkin_two['id']}/complete")
+
+    response = client.get("/api/personal-journal/snapshots")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert [snapshot["browser_date"] for snapshot in payload] == ["2026-07-25", "2026-07-24"]
+    assert payload[0]["status"] == "completed"
+    assert payload[1]["status"] == "completed"
+
+
+def test_personal_journal_excludes_unfinished_checkins(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+
+    unfinished = client.put("/api/morning-checkin", params={"browser_date": "2026-07-26"}).json()
+    completed = client.put("/api/morning-checkin", params={"browser_date": "2026-07-25"}).json()
+
+    for question_number in range(1, 7):
+        client.post(
+            f"/api/morning-checkin/{completed['id']}/answers",
+            json={"question_number": question_number, "answer": None},
+        )
+    client.post(f"/api/morning-checkin/{completed['id']}/complete")
+
+    response = client.get("/api/personal-journal/snapshots")
+
+    assert response.status_code == 200
+    assert [snapshot["id"] for snapshot in response.json()] == [completed["id"]]
+    assert unfinished["id"] not in [snapshot["id"] for snapshot in response.json()]

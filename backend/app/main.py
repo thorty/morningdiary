@@ -121,6 +121,11 @@ def create_app(
 
         return MorningCheckinResponse(**checkin)
 
+    @app.get("/api/personal-journal/snapshots", response_model=list[MorningCheckinResponse])
+    def list_personal_journal_snapshots() -> list[MorningCheckinResponse]:
+        snapshots = store.list_completed_snapshots_newest_first()
+        return [MorningCheckinResponse(**snapshot) for snapshot in snapshots]
+
     return app
 
 
