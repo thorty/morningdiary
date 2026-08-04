@@ -635,3 +635,55 @@ def test_personal_journal_excludes_unfinished_checkins(tmp_path: Path) -> None:
     assert response.status_code == 200
     assert [snapshot["id"] for snapshot in response.json()] == [completed["id"]]
     assert unfinished["id"] not in [snapshot["id"] for snapshot in response.json()]
+
+
+def test_personal_journal_export_returns_all_completed_snapshots_with_answers_and_summary_data(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+
+    first = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    second = client.put("/api/morning-checkin", params={"browser_date": "2026-07-25"}).json()
+
+    for question_number in range(1, 7):
+        client.post(
+            f"/api/morning-checkin/{first['id']}/answers",
+            json={"question_number": question_number, "answer": None if question_number != 2 else "Ruhig"},
+        )
+        client.post(
+            f"/api/morning-checkin/{second['id']}/answers",
+            json={"question_number": question_number, "answer": 5 if question_number == 1 else None},
+        )
+
+    client.post(f"/api/morning-checkin/{first['id']}/complete")
+    client.post(f"/api/morning-checkin/{second['id']}/complete")
+
+    export_response = client.get("/api/personal-journal/export")
+
+    assert export_response.status_code == 200
+    assert export_response.headers["content-type"].startswith("application/json")
+    assert "attachment; filename=" in export_response.headers["content-disposition"]
+
+    payload = export_response.json()
+    assert list(payload.keys()) == ["snapshots"]
+    assert [snapshot["browser_date"] for snapshot in payload["snapshots"]] == ["2026-07-25", "2026-07-24"]
+    assert payload["snapshots"][0]["answers"] == [5, None, None, None, None, None]
+    assert payload["snapshots"][1]["answers"] == [None, "Ruhig", None, None, None, None]
+    assert payload["snapshots"][0]["coach_summary"] == "Deine Zusammenfassung konnte heute nicht erstellt werden."
+    assert payload["snapshots"][1]["coach_summary"] == "Deine Zusammenfassung konnte heute nicht erstellt werden."
+
+
+def test_personal_journal_export_preserves_null_coach_summary_for_blank_snapshots(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+
+    checkin = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    for question_number in range(1, 7):
+        client.post(
+            f"/api/morning-checkin/{checkin['id']}/answers",
+            json={"question_number": question_number, "answer": None},
+        )
+    client.post(f"/api/morning-checkin/{checkin['id']}/complete")
+
+    export_response = client.get("/api/personal-journal/export")
+
+    assert export_response.status_code == 200
+    payload = export_response.json()
+    assert payload["snapshots"][0]["coach_summary"] is None

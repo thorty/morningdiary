@@ -192,3 +192,36 @@ test("lists completed personal journal snapshots newest first", async () => {
   });
   expect(response.map((item) => item.browser_date)).toEqual(["2026-08-05", "2026-08-04"]);
 });
+
+test("exports the personal journal as JSON through backend boundary", async () => {
+  const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        snapshots: [
+          {
+            id: "snapshot-1",
+            browser_date: "2026-08-04",
+            status: "completed",
+            answers: [null, "Dankbar", null, null, null, null],
+            next_question_number: null,
+            coach_summary: null,
+          },
+        ],
+      }),
+      { status: 200 },
+    ),
+  );
+
+  const client = createHttpPersonalJournalApiClient({
+    baseUrl: "http://localhost:8000",
+    fetchImpl: fetchMock,
+  });
+
+  const response = await client.exportPersonalJournal();
+
+  expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/personal-journal/export", {
+    method: "GET",
+  });
+  expect(response.snapshots).toHaveLength(1);
+  expect(response.snapshots[0]?.id).toBe("snapshot-1");
+});

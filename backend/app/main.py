@@ -4,6 +4,7 @@ from datetime import date
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.coach_summary import (
     COACH_SUMMARY_UNAVAILABLE_NOTE,
@@ -125,6 +126,17 @@ def create_app(
     def list_personal_journal_snapshots() -> list[MorningCheckinResponse]:
         snapshots = store.list_completed_snapshots_newest_first()
         return [MorningCheckinResponse(**snapshot) for snapshot in snapshots]
+
+    @app.get("/api/personal-journal/export")
+    def export_personal_journal() -> JSONResponse:
+        snapshots = store.list_completed_snapshots_newest_first()
+        payload = {
+            "snapshots": [MorningCheckinResponse(**snapshot).model_dump(mode="json") for snapshot in snapshots],
+        }
+        return JSONResponse(
+            content=payload,
+            headers={"Content-Disposition": 'attachment; filename="personal-journal-export.json"'},
+        )
 
     return app
 

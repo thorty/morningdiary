@@ -63,7 +63,9 @@ export function HomeScreen({
   const [startError, setStartError] = useState<string | null>(null);
   const [questionError, setQuestionError] = useState<string | null>(null);
   const [journalSnapshots, setJournalSnapshots] = useState<MorningCheckinResponse[]>([]);
-  const [journalError, setJournalError] = useState<string | null>(null);
+  const [journalLoadError, setJournalLoadError] = useState<string | null>(null);
+  const [journalExportError, setJournalExportError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -96,7 +98,7 @@ export function HomeScreen({
       })
       .catch(() => {
         if (isMounted) {
-          setJournalError("Die Personal Journal Eintraege konnten nicht geladen werden.");
+          setJournalLoadError("Die Personal Journal Eintraege konnten nicht geladen werden.");
         }
       });
 
@@ -234,6 +236,30 @@ export function HomeScreen({
     }
   }
 
+  async function downloadJournalExport(): Promise<void> {
+    setIsExporting(true);
+    setJournalExportError(null);
+
+    try {
+      const exportPayload = await apiClient.exportPersonalJournal();
+      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "personal-journal-export.json";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      setJournalExportError("Der Journal Export konnte nicht heruntergeladen werden.");
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   const activeCheckinId = activeCheckin?.id;
   const activeCheckinDate = activeCheckin?.browser_date;
   const progressLabel = currentQuestionNumber === null ? "Fragen abgeschlossen" : `Frage ${currentQuestionNumber} von ${QUESTION_COUNT}`;
@@ -341,8 +367,12 @@ export function HomeScreen({
 
         <section className="section" aria-label="Personal Journal">
           <h2>Personal Journal</h2>
-          {journalSnapshots.length === 0 && !journalError ? <p>Noch keine Daily Snapshots vorhanden.</p> : null}
-          {journalError ? <p className="status">{journalError}</p> : null}
+          <button type="button" onClick={() => void downloadJournalExport()} disabled={isExporting}>
+            {isExporting ? "Journal Export wird vorbereitet..." : "Journal Export herunterladen"}
+          </button>
+          {journalSnapshots.length === 0 && !journalLoadError ? <p>Noch keine Daily Snapshots vorhanden.</p> : null}
+          {journalLoadError ? <p className="status">{journalLoadError}</p> : null}
+          {journalExportError ? <p className="status">{journalExportError}</p> : null}
           {journalSnapshots.map((snapshot) => (
             <article key={snapshot.id} className="question-card">
               <h3>Daily Snapshot vom {snapshot.browser_date}</h3>

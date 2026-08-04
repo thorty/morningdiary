@@ -19,3 +19,7 @@ export type SaveMorningCheckinAnswerRequest = {
   question_number: number;
   answer: MorningCheckinAnswer;
 };
+
+export type PersonalJournalExportResponse = {
+  snapshots: MorningCheckinResponse[];
+};

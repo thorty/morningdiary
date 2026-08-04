@@ -40,6 +40,7 @@ function makeMockClient(overrides: Partial<PersonalJournalApiClient> = {}): Pers
       coach_summary: null,
     }),
     listPersonalJournalSnapshots: async () => [],
+    exportPersonalJournal: async () => ({ snapshots: [] }),
     ...overrides,
   };
 }
@@ -593,4 +594,51 @@ test("renders personal journal snapshots newest first with and without summary",
     "Daily Snapshot vom 2026-08-05",
     "Daily Snapshot vom 2026-08-04",
   ]);
+});
+
+test("downloads personal journal export through German action", async () => {
+  const exportPersonalJournal = vi.fn<PersonalJournalApiClient["exportPersonalJournal"]>().mockResolvedValue({
+    snapshots: [
+      {
+        id: "snapshot-1",
+        browser_date: "2026-08-04",
+        status: "completed",
+        answers: [null, "Dankbar", null, null, null, null],
+        next_question_number: null,
+        coach_summary: null,
+      },
+    ],
+  });
+
+  const createObjectURL = vi.fn(() => "blob:test-url");
+  const revokeObjectURL = vi.fn();
+  const originalCreateObjectURL = URL.createObjectURL;
+  const originalRevokeObjectURL = URL.revokeObjectURL;
+  const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  URL.createObjectURL = createObjectURL;
+  URL.revokeObjectURL = revokeObjectURL;
+
+  const appendSpy = vi.spyOn(document.body, "appendChild");
+  const removeSpy = vi.spyOn(document.body, "removeChild");
+
+  try {
+    render(<HomeScreen apiClient={makeMockClient({ exportPersonalJournal })} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Journal Export herunterladen" }));
+
+    await waitFor(() => {
+      expect(exportPersonalJournal).toHaveBeenCalledTimes(1);
+      expect(createObjectURL).toHaveBeenCalledTimes(1);
+      expect(revokeObjectURL).toHaveBeenCalledWith("blob:test-url");
+    });
+
+    expect(appendSpy).toHaveBeenCalled();
+    expect(removeSpy).toHaveBeenCalled();
+  } finally {
+    URL.createObjectURL = originalCreateObjectURL;
+    URL.revokeObjectURL = originalRevokeObjectURL;
+    clickSpy.mockRestore();
+    appendSpy.mockRestore();
+    removeSpy.mockRestore();
+  }
 });

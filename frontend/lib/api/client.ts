@@ -1,5 +1,6 @@
 import type {
   HealthResponse,
+  PersonalJournalExportResponse,
   MorningCheckinResponse,
   SaveMorningCheckinAnswerRequest,
 } from "@/lib/api/types";
@@ -11,6 +12,7 @@ export interface PersonalJournalApiClient {
   restartMorningCheckin(checkinId: string): Promise<MorningCheckinResponse>;
   completeMorningCheckin(checkinId: string): Promise<MorningCheckinResponse>;
   listPersonalJournalSnapshots(): Promise<MorningCheckinResponse[]>;
+  exportPersonalJournal(): Promise<PersonalJournalExportResponse>;
 }
 
 type HttpClientOptions = {
@@ -87,6 +89,12 @@ export function createHttpPersonalJournalApiClient(
         method: "GET",
       });
       return parseJson<MorningCheckinResponse[]>(response);
+    },
+    async exportPersonalJournal() {
+      const response = await fetchImpl(`${baseUrl}/api/personal-journal/export`, {
+        method: "GET",
+      });
+      return parseJson<PersonalJournalExportResponse>(response);
     },
   };
 }
