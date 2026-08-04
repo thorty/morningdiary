@@ -48,3 +48,22 @@ def test_returns_same_unfinished_checkin_for_same_browser_date(tmp_path: Path) -
     assert second_payload["browser_date"] == "2026-07-24"
     assert first_payload["status"] == "unfinished"
     assert second_payload["status"] == "unfinished"
+
+
+def test_creates_separate_unfinished_checkins_for_different_browser_dates(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+
+    first = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"})
+    second = client.put("/api/morning-checkin", params={"browser_date": "2026-07-25"})
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+
+    first_payload = first.json()
+    second_payload = second.json()
+
+    assert first_payload["id"] != second_payload["id"]
+    assert first_payload["browser_date"] == "2026-07-24"
+    assert second_payload["browser_date"] == "2026-07-25"
+    assert first_payload["status"] == "unfinished"
+    assert second_payload["status"] == "unfinished"

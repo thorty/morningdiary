@@ -61,6 +61,19 @@ main {
   color: var(--muted);
 }
 
+.breathing-card,
+.question-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem;
+  background: #fffdf8;
+}
+
+.breathing-card progress {
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
 @media (max-width: 640px) {
   .shell {
     padding: 1rem;
