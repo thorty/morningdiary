@@ -9,6 +9,7 @@ test("calls backend through typed boundary for morning check-in", async () => {
         status: "unfinished",
         answers: [null, null, null, null, null, null],
         next_question_number: 1,
+        coach_summary: null,
       }),
       { status: 200 },
     ),
@@ -31,6 +32,7 @@ test("calls backend through typed boundary for morning check-in", async () => {
     status: "unfinished",
     answers: [null, null, null, null, null, null],
     next_question_number: 1,
+    coach_summary: null,
   });
 });
 
@@ -43,6 +45,7 @@ test("saves a single answer through backend boundary", async () => {
         status: "unfinished",
         answers: [4, null, null, null, null, null],
         next_question_number: 2,
+        coach_summary: null,
       }),
       { status: 200 },
     ),
@@ -131,6 +134,7 @@ test("completes a check-in through backend boundary", async () => {
         status: "completed",
         answers: [4, "Dankbar", null, null, null, null],
         next_question_number: null,
+        coach_summary: "Du bist auf einem guten Weg.",
       }),
       { status: 200 },
     ),
@@ -148,4 +152,5 @@ test("completes a check-in through backend boundary", async () => {
   });
   expect(response.status).toBe("completed");
   expect(response.next_question_number).toBeNull();
+  expect(response.coach_summary).toBe("Du bist auf einem guten Weg.");
 });

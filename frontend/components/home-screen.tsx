@@ -269,6 +269,7 @@ export function HomeScreen({
                 <div>
                   <p>Tagesdatum: {activeCheckin.browser_date}</p>
                   <p>Stimmung: {activeCheckin.answers[0] ?? "Nicht angegeben"}</p>
+                  {activeCheckin.coach_summary ? <p>{activeCheckin.coach_summary}</p> : null}
                   <p>Antworten:</p>
                   <ol>
                     {activeCheckin.answers.map((answer, index) => (

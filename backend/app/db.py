@@ -14,6 +14,7 @@ class MorningCheckinRecord(TypedDict):
     status: Literal["unfinished", "completed"]
     answers: list[int | str | None]
     next_question_number: int | None
+    coach_summary: str | None
 
 
 class MorningCheckinNotFoundError(Exception):
@@ -133,13 +134,13 @@ class PersonalJournalStore:
             raise MorningCheckinNotFoundError
         return self._to_record(updated)
 
-    def complete_checkin(self, checkin_id: str) -> MorningCheckinRecord:
+    def complete_checkin(self, checkin_id: str) -> tuple[MorningCheckinRecord, bool]:
         existing = self._get_by_id(checkin_id)
         if existing is None:
             raise MorningCheckinNotFoundError
 
         if existing["status"] == "completed":
-            return self._to_record(existing)
+            return self._to_record(existing), False
 
         query = Query()
         browser_date_iso = cast(str, existing["browser_date"])
@@ -148,7 +149,7 @@ class PersonalJournalStore:
             self._table.get((query.browser_date == browser_date_iso) & (query.status == "completed")),
         )
         if already_completed is not None:
-            return self._to_record(already_completed)
+            return self._to_record(already_completed), False
 
         next_question_number = cast(int | None, existing.get("next_question_number"))
         if next_question_number is not None:
@@ -165,7 +166,7 @@ class PersonalJournalStore:
         updated = self._get_by_id(checkin_id)
         if updated is None:
             raise MorningCheckinNotFoundError
-        return self._to_record(updated)
+        return self._to_record(updated), True
 
     def _get_by_id(self, checkin_id: str) -> dict[str, Any] | None:
         return cast(dict[str, Any] | None, self._table.get(Query().id == checkin_id))
@@ -194,4 +195,19 @@ class PersonalJournalStore:
             "status": status,
             "answers": answers,
             "next_question_number": next_question_number,
+            "coach_summary": cast(str | None, row.get("coach_summary")),
         }
+
+    def save_coach_summary(self, checkin_id: str, coach_summary: str) -> MorningCheckinRecord:
+        existing = self._get_by_id(checkin_id)
+        if existing is None:
+            raise MorningCheckinNotFoundError
+
+        if existing["status"] != "completed":
+            raise InvalidMorningCheckinStateError
+
+        self._table.update({"coach_summary": coach_summary}, Query().id == checkin_id)
+        updated = self._get_by_id(checkin_id)
+        if updated is None:
+            raise MorningCheckinNotFoundError
+        return self._to_record(updated)

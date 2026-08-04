@@ -13,6 +13,7 @@ function makeMockClient(overrides: Partial<PersonalJournalApiClient> = {}): Pers
       status: "unfinished",
       answers: [null, null, null, null, null, null],
       next_question_number: 1,
+      coach_summary: null,
     }),
     saveMorningCheckinAnswer: async () => ({
       id: "abc",
@@ -20,6 +21,7 @@ function makeMockClient(overrides: Partial<PersonalJournalApiClient> = {}): Pers
       status: "unfinished",
       answers: [1, null, null, null, null, null],
       next_question_number: 2,
+      coach_summary: null,
     }),
     restartMorningCheckin: async () => ({
       id: "abc",
@@ -27,6 +29,7 @@ function makeMockClient(overrides: Partial<PersonalJournalApiClient> = {}): Pers
       status: "unfinished",
       answers: [null, null, null, null, null, null],
       next_question_number: 1,
+      coach_summary: null,
     }),
     completeMorningCheckin: async () => ({
       id: "abc",
@@ -34,6 +37,7 @@ function makeMockClient(overrides: Partial<PersonalJournalApiClient> = {}): Pers
       status: "completed",
       answers: [null, null, null, null, null, null],
       next_question_number: null,
+      coach_summary: null,
     }),
     ...overrides,
   };
@@ -64,6 +68,7 @@ test("starts check-in with browser-local date and can skip breathing exercise", 
     status: "unfinished",
     answers: [null, null, null, null, null, null],
     next_question_number: 1,
+    coach_summary: null,
   });
 
   render(
@@ -92,6 +97,7 @@ test("finishes breathing exercise and reaches first question", async () => {
     status: "unfinished",
     answers: [null, null, null, null, null, null],
     next_question_number: 1,
+    coach_summary: null,
   });
 
   render(
@@ -139,6 +145,7 @@ test("saves mood answer and advances to next question", async () => {
       status: "unfinished",
       answers: [4, null, null, null, null, null],
       next_question_number: 2,
+      coach_summary: null,
     });
 
   render(
@@ -152,6 +159,7 @@ test("saves mood answer and advances to next question", async () => {
             status: "unfinished",
             answers: [null, null, null, null, null, null],
             next_question_number: 1,
+            coach_summary: null,
           }),
         })
       }
@@ -192,6 +200,7 @@ test("shows validation message for invalid mood input", async () => {
             status: "unfinished",
             answers: [null, null, null, null, null, null],
             next_question_number: 1,
+            coach_summary: null,
           }),
         })
       }
@@ -224,6 +233,7 @@ test("resumes an unfinished check-in at the next question", async () => {
             status: "unfinished",
             answers: [3, "Schon notiert", null, null, null, null],
             next_question_number: 3,
+            coach_summary: null,
           }),
         })
       }
@@ -246,6 +256,7 @@ test("restarts unfinished check-in and resets to question one", async () => {
     status: "unfinished",
     answers: [null, null, null, null, null, null],
     next_question_number: 1,
+    coach_summary: null,
   });
 
   render(
@@ -259,6 +270,7 @@ test("restarts unfinished check-in and resets to question one", async () => {
             status: "unfinished",
             answers: [2, "Teilweise", null, null, null, null],
             next_question_number: 3,
+            coach_summary: null,
           }),
         })
       }
@@ -289,6 +301,7 @@ test("renders immutable completed daily snapshot when resumed as completed", asy
             status: "completed",
             answers: [3, "Dankbar", null, "Energie", null, null],
             next_question_number: null,
+            coach_summary: "Bleib heute freundlich mit dir.",
           }),
         })
       }
@@ -302,7 +315,32 @@ test("renders immutable completed daily snapshot when resumed as completed", asy
 
   expect(screen.getByText("Tagesdatum: 2026-08-04")).toBeInTheDocument();
   expect(screen.getByText("Stimmung: 3")).toBeInTheDocument();
+  expect(screen.getByText("Bleib heute freundlich mit dir.")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Morning Check-in neu starten" })).not.toBeInTheDocument();
+});
+
+test("shows fallback note when completed snapshot has no generated summary", async () => {
+  render(
+    <HomeScreen
+      apiClient={
+        makeMockClient({
+          getOrCreateMorningCheckin: async () => ({
+            id: "checkin-1",
+            browser_date: "2026-08-04",
+            status: "completed",
+            answers: [null, "Only a short answer", null, null, null, null],
+            next_question_number: null,
+            coach_summary: "Deine Zusammenfassung konnte heute nicht erstellt werden.",
+          }),
+        })
+      }
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Morning Check-in starten" }));
+  await waitFor(() => {
+    expect(screen.getByText("Deine Zusammenfassung konnte heute nicht erstellt werden.")).toBeInTheDocument();
+  });
 });
 
 test("completes a blank check-in and renders completed daily snapshot", async () => {
@@ -314,6 +352,7 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
       status: "unfinished",
       answers: [null, null, null, null, null, null],
       next_question_number: 2,
+      coach_summary: null,
     })
     .mockResolvedValueOnce({
       id: "checkin-1",
@@ -321,6 +360,7 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
       status: "unfinished",
       answers: [null, null, null, null, null, null],
       next_question_number: 3,
+      coach_summary: null,
     })
     .mockResolvedValueOnce({
       id: "checkin-1",
@@ -328,6 +368,7 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
       status: "unfinished",
       answers: [null, null, null, null, null, null],
       next_question_number: 4,
+      coach_summary: null,
     })
     .mockResolvedValueOnce({
       id: "checkin-1",
@@ -335,6 +376,7 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
       status: "unfinished",
       answers: [null, null, null, null, null, null],
       next_question_number: 5,
+      coach_summary: null,
     })
     .mockResolvedValueOnce({
       id: "checkin-1",
@@ -342,6 +384,7 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
       status: "unfinished",
       answers: [null, null, null, null, null, null],
       next_question_number: 6,
+      coach_summary: null,
     })
     .mockResolvedValueOnce({
       id: "checkin-1",
@@ -349,6 +392,7 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
       status: "unfinished",
       answers: [null, null, null, null, null, null],
       next_question_number: null,
+      coach_summary: null,
     });
   const completeMorningCheckin = vi.fn<PersonalJournalApiClient["completeMorningCheckin"]>().mockResolvedValue({
     id: "checkin-1",
@@ -356,6 +400,7 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
     status: "completed",
     answers: [null, null, null, null, null, null],
     next_question_number: null,
+    coach_summary: null,
   });
 
   render(
@@ -368,6 +413,7 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
             status: "unfinished",
             answers: [null, null, null, null, null, null],
             next_question_number: 1,
+            coach_summary: null,
           }),
           saveMorningCheckinAnswer,
           completeMorningCheckin,
@@ -394,4 +440,108 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
   });
   expect(screen.getByText("Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.")).toBeInTheDocument();
   expect(screen.getByText("Stimmung: Nicht angegeben")).toBeInTheDocument();
+});
+
+test("renders generated coach summary after completing final answer", async () => {
+  const saveMorningCheckinAnswer = vi
+    .fn<PersonalJournalApiClient["saveMorningCheckinAnswer"]>()
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [4, null, null, null, null, null],
+      next_question_number: 2,
+      coach_summary: null,
+    })
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [4, "Dankbar", null, null, null, null],
+      next_question_number: 3,
+      coach_summary: null,
+    })
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [4, "Dankbar", "Loslassen", null, null, null],
+      next_question_number: 4,
+      coach_summary: null,
+    })
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [4, "Dankbar", "Loslassen", "Energie", null, null],
+      next_question_number: 5,
+      coach_summary: null,
+    })
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [4, "Dankbar", "Loslassen", "Energie", "Kleinigkeit", null],
+      next_question_number: 6,
+      coach_summary: null,
+    })
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [4, "Dankbar", "Loslassen", "Energie", "Kleinigkeit", "Freundlich"],
+      next_question_number: null,
+      coach_summary: null,
+    });
+
+  const completeMorningCheckin = vi.fn<PersonalJournalApiClient["completeMorningCheckin"]>().mockResolvedValue({
+    id: "checkin-1",
+    browser_date: "2026-08-04",
+    status: "completed",
+    answers: [4, "Dankbar", "Loslassen", "Energie", "Kleinigkeit", "Freundlich"],
+    next_question_number: null,
+    coach_summary: "Du startest klar und freundlich in den Tag.",
+  });
+
+  render(
+    <HomeScreen
+      apiClient={
+        makeMockClient({
+          getOrCreateMorningCheckin: async () => ({
+            id: "checkin-1",
+            browser_date: "2026-08-04",
+            status: "unfinished",
+            answers: [null, null, null, null, null, null],
+            next_question_number: 1,
+            coach_summary: null,
+          }),
+          saveMorningCheckinAnswer,
+          completeMorningCheckin,
+        })
+      }
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Morning Check-in starten" }));
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Atemuebung ueberspringen" })).toBeInTheDocument();
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Atemuebung ueberspringen" }));
+
+  fireEvent.change(screen.getByLabelText("Optionale Stimmung (1 bis 5)"), { target: { value: "4" } });
+  fireEvent.click(screen.getByRole("button", { name: /Antwort speichern/ }));
+  for (let index = 0; index < 5; index += 1) {
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: `Frage ${index + 2} von 6`, level: 3 })).toBeInTheDocument();
+    });
+    fireEvent.change(screen.getByLabelText("Optionale Freitext-Antwort"), {
+      target: { value: `Antwort ${index + 2}` },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Antwort speichern/ }));
+  }
+
+  await waitFor(() => {
+    expect(completeMorningCheckin).toHaveBeenCalledWith("checkin-1");
+  });
+  expect(screen.getByText("Du startest klar und freundlich in den Tag.")).toBeInTheDocument();
 });

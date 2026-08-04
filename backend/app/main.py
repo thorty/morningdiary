@@ -5,6 +5,13 @@ from datetime import date
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.coach_summary import (
+    COACH_SUMMARY_UNAVAILABLE_NOTE,
+    CoachSummaryGenerator,
+    CoachSummaryRequest,
+    OpenAICoachSummaryGenerator,
+    detect_predominant_answer_language,
+)
 from app.config import Settings
 from app.db import (
     InvalidMorningCheckinStateError,
@@ -15,9 +22,17 @@ from app.db import (
 from app.models import HealthResponse, MorningCheckinResponse, SaveMorningCheckinAnswerRequest
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    coach_summary_generator: CoachSummaryGenerator | None = None,
+) -> FastAPI:
     active_settings = settings or Settings()
     store = PersonalJournalStore(active_settings.tinydb_path)
+    configured_generator = coach_summary_generator
+    if configured_generator is None and active_settings.openai_api_key:
+        configured_generator = OpenAICoachSummaryGenerator(
+            api_key=active_settings.openai_api_key,
+        )
 
     app = FastAPI(title="Morning Coach Backend")
     app.add_middleware(
@@ -71,7 +86,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/api/morning-checkin/{checkin_id}/complete", response_model=MorningCheckinResponse)
     def complete_morning_checkin(checkin_id: str) -> MorningCheckinResponse:
         try:
-            checkin = store.complete_checkin(checkin_id)
+            checkin, newly_completed = store.complete_checkin(checkin_id)
         except MorningCheckinNotFoundError as exc:
             raise HTTPException(status_code=404, detail="Morning Check-in wurde nicht gefunden.") from exc
         except MorningCheckinNotReadyForCompletionError as exc:
@@ -79,6 +94,30 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 status_code=409,
                 detail="Bitte beantworte zuerst alle sechs Fragen, bevor du abschliesst.",
             ) from exc
+
+        has_any_answer = any(answer is not None for answer in checkin["answers"])
+        if not newly_completed:
+            return MorningCheckinResponse(**checkin)
+
+        if has_any_answer and checkin["coach_summary"] is None:
+            if configured_generator is None:
+                checkin = store.save_coach_summary(checkin_id, COACH_SUMMARY_UNAVAILABLE_NOTE)
+                return MorningCheckinResponse(**checkin)
+
+            try:
+                generated_summary = configured_generator.generate(
+                    CoachSummaryRequest(
+                        answers=checkin["answers"],
+                        target_language=detect_predominant_answer_language(checkin["answers"]),
+                    )
+                )
+            except Exception:
+                generated_summary = None
+
+            if generated_summary and generated_summary.strip():
+                checkin = store.save_coach_summary(checkin_id, generated_summary.strip())
+            else:
+                checkin = store.save_coach_summary(checkin_id, COACH_SUMMARY_UNAVAILABLE_NOTE)
 
         return MorningCheckinResponse(**checkin)
 

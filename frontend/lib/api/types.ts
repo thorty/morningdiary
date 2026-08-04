@@ -12,6 +12,7 @@ export type MorningCheckinResponse = {
   status: MorningCheckinStatus;
   answers: MorningCheckinAnswer[];
   next_question_number: number | null;
+  coach_summary: string | null;
 };
 
 export type SaveMorningCheckinAnswerRequest = {
