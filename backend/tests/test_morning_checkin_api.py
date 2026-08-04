@@ -67,3 +67,18 @@ def test_creates_separate_unfinished_checkins_for_different_browser_dates(tmp_pa
     assert second_payload["browser_date"] == "2026-07-25"
     assert first_payload["status"] == "unfinished"
     assert second_payload["status"] == "unfinished"
+
+
+def test_allows_cors_preflight_for_local_frontend(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+
+    response = client.options(
+        "/api/morning-checkin",
+        headers={
+            "Origin": "http://localhost:3000",
+            "Access-Control-Request-Method": "PUT",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"

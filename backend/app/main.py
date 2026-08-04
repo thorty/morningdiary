@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import Settings
 from app.db import PersonalJournalStore
@@ -14,6 +15,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     store = PersonalJournalStore(active_settings.tinydb_path)
 
     app = FastAPI(title="Morning Coach Backend")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=active_settings.cors_allow_origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     @app.get("/health", response_model=HealthResponse)
     def health() -> HealthResponse:
