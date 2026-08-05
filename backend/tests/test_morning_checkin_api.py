@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 from tinydb import Query, TinyDB
 
 from app.config import Settings
 from app.main import create_app
+
+
+BACKEND_LOGGER_NAME = "morningcoach.backend"
 
 
 class FakeSummaryGenerator:
@@ -28,6 +33,14 @@ def build_client(tmp_path: Path) -> TestClient:
     settings = Settings(tinydb_path=tmp_path / "journal.json")
     app = create_app(settings)
     return TestClient(app)
+
+
+def _records_for_event(caplog: pytest.LogCaptureFixture, event: str) -> list[logging.LogRecord]:
+    return [
+        record
+        for record in caplog.records
+        if record.name == BACKEND_LOGGER_NAME and getattr(record, "event", None) == event
+    ]
 
 
 def test_health_endpoint_reports_ok(tmp_path: Path) -> None:
@@ -687,3 +700,198 @@ def test_personal_journal_export_preserves_null_coach_summary_for_blank_snapshot
     assert export_response.status_code == 200
     payload = export_response.json()
     assert payload["snapshots"][0]["coach_summary"] is None
+
+
+def test_logs_backend_startup_when_app_is_created(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO, logger=BACKEND_LOGGER_NAME)
+
+    _ = build_client(tmp_path)
+
+    startup_records = _records_for_event(caplog, "backend_started")
+    assert len(startup_records) == 1
+
+
+def test_logs_generation_start_and_success_context(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO, logger=BACKEND_LOGGER_NAME)
+    fake_generator = FakeSummaryGenerator(response_text="Du bist auf einem guten Weg.")
+    settings = Settings(tinydb_path=tmp_path / "journal.json", openai_api_key="super-secret-key")
+    client = TestClient(create_app(settings, coach_summary_generator=fake_generator))
+
+    checkin = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    checkin_id = checkin["id"]
+    client.post(
+        f"/api/morning-checkin/{checkin_id}/answers",
+        json={"question_number": 1, "answer": 4},
+    )
+    client.post(
+        f"/api/morning-checkin/{checkin_id}/answers",
+        json={"question_number": 2, "answer": "Ich bin dankbar fuer den ruhigen Morgen."},
+    )
+    for question_number in range(3, 7):
+        client.post(
+            f"/api/morning-checkin/{checkin_id}/answers",
+            json={"question_number": question_number, "answer": None},
+        )
+
+    response = client.post(f"/api/morning-checkin/{checkin_id}/complete")
+
+    assert response.status_code == 200
+    started_records = _records_for_event(caplog, "coach_summary_generation_started")
+    assert len(started_records) == 1
+    assert getattr(started_records[0], "checkin_id") == checkin_id
+    assert getattr(started_records[0], "target_language") == "de"
+    assert getattr(started_records[0], "answers") == [
+        4,
+        "Ich bin dankbar fuer den ruhigen Morgen.",
+        None,
+        None,
+        None,
+        None,
+    ]
+
+    success_records = _records_for_event(caplog, "coach_summary_generation_succeeded")
+    assert len(success_records) == 1
+    assert getattr(success_records[0], "checkin_id") == checkin_id
+    assert "super-secret-key" not in caplog.text
+
+
+def test_logs_generation_exception_and_fallback_persistence(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO, logger=BACKEND_LOGGER_NAME)
+    fake_generator = FakeSummaryGenerator(raises=True)
+    settings = Settings(tinydb_path=tmp_path / "journal.json")
+    client = TestClient(create_app(settings, coach_summary_generator=fake_generator))
+
+    checkin = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    checkin_id = checkin["id"]
+    for question_number in range(1, 7):
+        answer = "Only english text" if question_number == 2 else None
+        client.post(
+            f"/api/morning-checkin/{checkin_id}/answers",
+            json={"question_number": question_number, "answer": answer},
+        )
+
+    response = client.post(f"/api/morning-checkin/{checkin_id}/complete")
+
+    assert response.status_code == 200
+    error_records = _records_for_event(caplog, "coach_summary_generation_failed_exception")
+    assert len(error_records) == 1
+    assert getattr(error_records[0], "checkin_id") == checkin_id
+
+    fallback_records = _records_for_event(caplog, "coach_summary_fallback_saved")
+    assert len(fallback_records) == 1
+    assert getattr(fallback_records[0], "reason") == "generation_exception"
+
+
+def test_logs_empty_generation_output_as_error_and_fallback(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO, logger=BACKEND_LOGGER_NAME)
+    fake_generator = FakeSummaryGenerator(response_text=None)
+    settings = Settings(tinydb_path=tmp_path / "journal.json")
+    client = TestClient(create_app(settings, coach_summary_generator=fake_generator))
+
+    checkin = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    checkin_id = checkin["id"]
+    client.post(
+        f"/api/morning-checkin/{checkin_id}/answers",
+        json={"question_number": 1, "answer": 3},
+    )
+    for question_number in range(2, 7):
+        client.post(
+            f"/api/morning-checkin/{checkin_id}/answers",
+            json={"question_number": question_number, "answer": None},
+        )
+
+    response = client.post(f"/api/morning-checkin/{checkin_id}/complete")
+
+    assert response.status_code == 200
+    empty_records = _records_for_event(caplog, "coach_summary_generation_failed_empty")
+    assert len(empty_records) == 1
+    assert getattr(empty_records[0], "checkin_id") == checkin_id
+
+    fallback_records = _records_for_event(caplog, "coach_summary_fallback_saved")
+    assert len(fallback_records) == 1
+    assert getattr(fallback_records[0], "reason") == "generation_empty"
+
+
+def test_logs_blank_generation_output_as_error_and_fallback(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO, logger=BACKEND_LOGGER_NAME)
+    fake_generator = FakeSummaryGenerator(response_text="   ")
+    settings = Settings(tinydb_path=tmp_path / "journal.json")
+    client = TestClient(create_app(settings, coach_summary_generator=fake_generator))
+
+    checkin = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    checkin_id = checkin["id"]
+    client.post(
+        f"/api/morning-checkin/{checkin_id}/answers",
+        json={"question_number": 1, "answer": 3},
+    )
+    for question_number in range(2, 7):
+        client.post(
+            f"/api/morning-checkin/{checkin_id}/answers",
+            json={"question_number": question_number, "answer": None},
+        )
+
+    response = client.post(f"/api/morning-checkin/{checkin_id}/complete")
+
+    assert response.status_code == 200
+    empty_records = _records_for_event(caplog, "coach_summary_generation_failed_empty")
+    assert len(empty_records) == 1
+
+    fallback_records = _records_for_event(caplog, "coach_summary_fallback_saved")
+    assert len(fallback_records) == 1
+    assert getattr(fallback_records[0], "reason") == "generation_empty"
+
+
+def test_logs_blank_completion_and_idempotent_completion_paths(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger=BACKEND_LOGGER_NAME)
+    fake_generator = FakeSummaryGenerator(response_text="unused")
+    settings = Settings(tinydb_path=tmp_path / "journal.json")
+    client = TestClient(create_app(settings, coach_summary_generator=fake_generator))
+
+    checkin = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    checkin_id = checkin["id"]
+    for question_number in range(1, 7):
+        client.post(
+            f"/api/morning-checkin/{checkin_id}/answers",
+            json={"question_number": question_number, "answer": None},
+        )
+
+    first_completion = client.post(f"/api/morning-checkin/{checkin_id}/complete")
+    second_completion = client.post(f"/api/morning-checkin/{checkin_id}/complete")
+
+    assert first_completion.status_code == 200
+    assert second_completion.status_code == 200
+    assert _records_for_event(caplog, "coach_summary_generation_skipped_blank")
+    assert _records_for_event(caplog, "morning_checkin_completion_idempotent")
+    assert not _records_for_event(caplog, "coach_summary_generation_started")
+
+
+def test_logs_render_context_fields_in_terminal_message(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO, logger=BACKEND_LOGGER_NAME)
+    fake_generator = FakeSummaryGenerator(response_text="Du bist auf einem guten Weg.")
+    settings = Settings(tinydb_path=tmp_path / "journal.json")
+    client = TestClient(create_app(settings, coach_summary_generator=fake_generator))
+
+    checkin = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    checkin_id = checkin["id"]
+    client.post(
+        f"/api/morning-checkin/{checkin_id}/answers",
+        json={"question_number": 1, "answer": 4},
+    )
+    for question_number in range(2, 7):
+        client.post(
+            f"/api/morning-checkin/{checkin_id}/answers",
+            json={"question_number": question_number, "answer": None},
+        )
+
+    response = client.post(f"/api/morning-checkin/{checkin_id}/complete")
+
+    assert response.status_code == 200
+    started_records = _records_for_event(caplog, "coach_summary_generation_started")
+    assert len(started_records) == 1
+    message = started_records[0].getMessage()
+    assert "checkin_id=" in message
+    assert "target_language=" in message
+    assert "answers=" in message

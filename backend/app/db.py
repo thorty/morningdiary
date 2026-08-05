@@ -30,6 +30,12 @@ class MorningCheckinNotReadyForCompletionError(Exception):
 
 
 QUESTION_COUNT = 6
+GetOrCreateOutcome = Literal["created", "resumed_unfinished", "returned_completed"]
+CompletionOutcome = Literal[
+    "newly_completed",
+    "already_completed_same_checkin",
+    "already_completed_same_day",
+]
 
 
 def _default_answers() -> list[int | str | None]:
@@ -46,21 +52,24 @@ class PersonalJournalStore:
         self._db = TinyDB(db_path)
         self._table = self._db.table("morning_checkins")
 
-    def get_or_create_morning_checkin_for_date(self, browser_date: date) -> MorningCheckinRecord:
+    def get_or_create_morning_checkin_for_date(
+        self,
+        browser_date: date,
+    ) -> tuple[MorningCheckinRecord, GetOrCreateOutcome]:
         query = Query()
         existing_completed = cast(
             dict[str, Any] | None,
             self._table.get((query.browser_date == browser_date.isoformat()) & (query.status == "completed")),
         )
         if existing_completed is not None:
-            return self._to_record(existing_completed)
+            return self._to_record(existing_completed), "returned_completed"
 
         existing = cast(
             dict[str, Any] | None,
             self._table.get((query.browser_date == browser_date.isoformat()) & (query.status == "unfinished")),
         )
         if existing is not None:
-            return self._to_record(existing)
+            return self._to_record(existing), "resumed_unfinished"
 
         checkin = {
             "id": str(uuid4()),
@@ -71,7 +80,7 @@ class PersonalJournalStore:
             "next_question_number": 1,
         }
         self._table.insert(checkin)
-        return self._to_record(checkin)
+        return self._to_record(checkin), "created"
 
     def save_answer(
         self,
@@ -134,13 +143,13 @@ class PersonalJournalStore:
             raise MorningCheckinNotFoundError
         return self._to_record(updated)
 
-    def complete_checkin(self, checkin_id: str) -> tuple[MorningCheckinRecord, bool]:
+    def complete_checkin(self, checkin_id: str) -> tuple[MorningCheckinRecord, CompletionOutcome]:
         existing = self._get_by_id(checkin_id)
         if existing is None:
             raise MorningCheckinNotFoundError
 
         if existing["status"] == "completed":
-            return self._to_record(existing), False
+            return self._to_record(existing), "already_completed_same_checkin"
 
         query = Query()
         browser_date_iso = cast(str, existing["browser_date"])
@@ -149,7 +158,7 @@ class PersonalJournalStore:
             self._table.get((query.browser_date == browser_date_iso) & (query.status == "completed")),
         )
         if already_completed is not None:
-            return self._to_record(already_completed), False
+            return self._to_record(already_completed), "already_completed_same_day"
 
         next_question_number = cast(int | None, existing.get("next_question_number"))
         if next_question_number is not None:
@@ -166,7 +175,7 @@ class PersonalJournalStore:
         updated = self._get_by_id(checkin_id)
         if updated is None:
             raise MorningCheckinNotFoundError
-        return self._to_record(updated), True
+        return self._to_record(updated), "newly_completed"
 
     def _get_by_id(self, checkin_id: str) -> dict[str, Any] | None:
         return cast(dict[str, Any] | None, self._table.get(Query().id == checkin_id))
