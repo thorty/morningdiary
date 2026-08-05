@@ -7,6 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from tinydb import Query, TinyDB
 
+import app.config as config
 from app.config import Settings
 from app.main import create_app
 
@@ -50,6 +51,30 @@ def test_health_endpoint_reports_ok(tmp_path: Path) -> None:
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_settings_load_openai_key_from_backend_env_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    env_file = tmp_path / ".env"
+    env_file.write_text("OPENAI_API_KEY=key-from-env-file\n")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(config, "BACKEND_ENV_PATH", env_file)
+
+    assert Settings().openai_api_key == "key-from-env-file"
+
+
+def test_process_environment_takes_precedence_over_backend_env_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    env_file = tmp_path / ".env"
+    env_file.write_text("OPENAI_API_KEY=key-from-env-file\n")
+    monkeypatch.setenv("OPENAI_API_KEY", "key-from-process")
+    monkeypatch.setattr(config, "BACKEND_ENV_PATH", env_file)
+
+    assert Settings().openai_api_key == "key-from-process"
 
 
 def test_rejects_invalid_browser_date(tmp_path: Path) -> None:
@@ -709,6 +734,18 @@ def test_logs_backend_startup_when_app_is_created(tmp_path: Path, caplog: pytest
 
     startup_records = _records_for_event(caplog, "backend_started")
     assert len(startup_records) == 1
+
+
+def test_backend_info_logs_remain_enabled_when_root_logging_is_already_configured(tmp_path: Path) -> None:
+    logger = logging.getLogger(BACKEND_LOGGER_NAME)
+    previous_level = logger.level
+    logger.setLevel(logging.NOTSET)
+    try:
+        _ = build_client(tmp_path)
+
+        assert logger.level == logging.INFO
+    finally:
+        logger.setLevel(previous_level)
 
 
 def test_logs_generation_start_and_success_context(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:

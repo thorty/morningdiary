@@ -91,7 +91,7 @@ gratitude-morning-coach/
 │   ├── package.json
 │   └── tsconfig.json
 │
-├── backend/                 # FastAPI App
+├── backend/                 # FastAPI App, managed with uv
 │   ├── app/
 │   │   ├── main.py          # FastAPI entrypoint
 │   │   ├── config.py        # Settings (API Keys, Pfade)
@@ -102,8 +102,9 @@ gratitude-morning-coach/
 │   │   │   └── journal.py   # /journal (History-Endpunkte)
 │   │   └── services/
 │   │       └── llm.py       # LLM-Call & Prompt-Logik für Summary
-│   ├── requirements.txt
-│   └── uvicorn_app.py       # z.B. `uvicorn app.main:app --reload`
+│   ├── pyproject.toml       # Python dependencies managed and locked by uv
+│   ├── uv.lock
+│   └── uvicorn_app.py       # z.B. `uv run uvicorn app.main:app --reload`
 │
 └── README.md                # Projektbeschreibung & Setup
 ```
@@ -302,7 +303,7 @@ TinyDB ist perfekt für diesen Anwendungsfall: kleiner Datensatz, einfache Dokum
 ## Next Steps
 
 - Frontend-Gerüst mit Next.js anlegen (`frontend/`).
-- FastAPI + TinyDB im `backend/` implementieren.
+- FastAPI + TinyDB im `backend/` implementieren; Python-Abhängigkeiten, Lockfile, Tests und lokale Service-Befehle werden mit `uv` verwaltet bzw. ausgeführt.
 - LLM-Call für Summary im `services/llm.py` kapseln.
 - Eine einfache Start-Route, die:
   - Atemtimer anzeigt,

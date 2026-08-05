@@ -47,6 +47,7 @@ FastAPI owns TinyDB persistence and a replaceable Coach Summary Generator. The i
 - The application is a single-user Personal Journal with no accounts, authentication, `user_id`, or user selection.
 - The application is self-hosted on a machine with persistent local storage and is reachable only through a LAN or private VPN. It must not be directly exposed to the public internet without an authentication design.
 - The frontend is a Next.js TypeScript application. The backend is a FastAPI Python application communicating with the frontend through REST.
+- The Python backend uses `uv` as its required package manager for dependency installation, locking, test execution, and local service commands.
 - FastAPI exclusively owns persistence in TinyDB and is the only layer allowed to invoke the Coach Summary Generator. The browser must never read the database directly or receive `OPENAI_API_KEY`.
 - The browser provides its local calendar date when retrieving or creating the day’s Morning Check-in. The backend enforces at most one completed Daily Snapshot for that date and permits one unfinished check-in to resume or restart.
 - A Morning Check-in has six fixed German questions. The first accepts an optional integer mood rating from 1 through 5. Each remaining question accepts one optional free-text value. The question set is deterministic and does not adapt to responses.
