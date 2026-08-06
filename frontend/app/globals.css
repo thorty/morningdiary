@@ -539,26 +539,16 @@ h3 {
   text-align: center;
 }
 
-.breath-orb {
-  position: relative;
-  display: grid;
-  width: min(var(--orb-diameter, 12rem), 55vw);
-  place-items: center;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: conic-gradient(var(--primary) var(--breathing-progress), var(--color-line) 0);
-  transition: width var(--motion-fast), background 250ms linear;
+.breathing-animation {
+  width: min(100%, 45rem);
+  margin: 1rem auto;
+  overflow: hidden;
 }
 
-.breath-orb::before {
-  width: 80%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  content: "";
-  background: var(--orb-gradient);
-  box-shadow:
-    0 0 0 1rem color-mix(in srgb, var(--accent) 32%, transparent),
-    0 0 0 2rem color-mix(in srgb, var(--accent) 16%, transparent);
+.breathing-animation canvas {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
 }
 
 .breathing-cue {

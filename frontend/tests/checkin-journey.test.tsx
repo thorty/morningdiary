@@ -74,29 +74,8 @@ test("takes a person from the start page through a Morning Check-in into their P
   expect(screen.getByRole("link", { name: "Zur Startseite" })).toHaveAttribute("href", "/");
 });
 
-test("lets a person resize the breathing orb with pointer movement within its interaction area", async () => {
+test("shows the interactive p5.js breathing animation", async () => {
   render(<MorningCheckinPage apiClient={client()} todayDateProvider={() => new Date("2026-08-04T12:00:00")} />);
 
-  const interactionArea = await screen.findByRole("img", { name: "Interaktive Atemkugel" });
-  Object.defineProperty(interactionArea, "getBoundingClientRect", {
-    value: () => ({ bottom: 240, height: 240, left: 0, right: 240, top: 0, width: 240, x: 0, y: 0 }),
-  });
-
-  expect(interactionArea).toHaveStyle("--orb-diameter: 12rem");
-
-  fireEvent(interactionArea, new MouseEvent("pointermove", { bubbles: true, clientX: 0, clientY: 0 }));
-  expect(interactionArea).toHaveStyle("--orb-diameter: 9rem");
-
-  fireEvent(interactionArea, new MouseEvent("pointermove", { bubbles: true, clientX: 240, clientY: 240 }));
-  expect(interactionArea).toHaveStyle("--orb-diameter: 15rem");
-});
-
-test("keeps the breathing orb connected to the active theme variables", async () => {
-  document.documentElement.dataset.theme = "green";
-  render(<MorningCheckinPage apiClient={client()} todayDateProvider={() => new Date("2026-08-04T12:00:00")} />);
-
-  const interactionArea = await screen.findByRole("img", { name: "Interaktive Atemkugel" });
-
-  expect(document.documentElement).toHaveAttribute("data-theme", "green");
-  expect(interactionArea).toHaveStyle("--orb-gradient: radial-gradient(circle at 35% 30%, var(--color-orb-start), var(--color-orb-middle) 55%, var(--color-orb-end))");
+  expect(await screen.findByRole("img", { name: "Interaktive Atemanimation" })).toBeInTheDocument();
 });

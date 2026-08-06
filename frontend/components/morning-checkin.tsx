@@ -7,6 +7,7 @@ import {
   DailySnapshot,
   MOOD_LABELS,
 } from "@/components/daily-snapshot";
+import { BreathingAnimation } from "@/components/breathing-animation";
 import type { PersonalJournalApiClient } from "@/lib/api/client";
 import type {
   MorningCheckinAnswer,
@@ -15,9 +16,6 @@ import type {
 
 const BREATHING_DURATION_SECONDS = 30;
 const BREATHING_CYCLE_SECONDS = 10;
-const ORB_MINIMUM_DIAMETER_REM = 9;
-const ORB_DEFAULT_DIAMETER_REM = 12;
-const ORB_MAXIMUM_DIAMETER_REM = 15;
 
 const QUESTION_CARDS = [
   { kicker: "Ankommen", prompt: "Wie fühlst du dich heute Morgen auf einer Skala von 1 bis 5?" },
@@ -87,7 +85,6 @@ export function MorningCheckin({
   const [isCompleting, setIsCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shouldResume, setShouldResume] = useState(false);
-  const [orbDiameter, setOrbDiameter] = useState(ORB_DEFAULT_DIAMETER_REM);
   const breathingEndsAt = useRef<number | null>(null);
   const hasFinishedBreathing = useRef(false);
 
@@ -112,18 +109,6 @@ export function MorningCheckin({
     hasFinishedBreathing.current = true;
     setSecondsRemaining(0);
     setViewState("questionnaire");
-  }
-
-  function updateOrbDiameter(event: React.PointerEvent<HTMLDivElement>): void {
-    const area = event.currentTarget.getBoundingClientRect();
-    if (area.width === 0 || area.height === 0) return;
-    const horizontalPosition = Math.min(1, Math.max(0, (event.clientX - area.left) / area.width));
-    const verticalPosition = Math.min(1, Math.max(0, (event.clientY - area.top) / area.height));
-    const normalizedDiameter = (horizontalPosition + verticalPosition) / 2;
-    setOrbDiameter(
-      ORB_MINIMUM_DIAMETER_REM +
-        normalizedDiameter * (ORB_MAXIMUM_DIAMETER_REM - ORB_MINIMUM_DIAMETER_REM),
-    );
   }
 
   async function startMorningCheckin(isResuming = false): Promise<void> {
@@ -303,17 +288,7 @@ export function MorningCheckin({
         {viewState === "breathing" ? (
           <div className="breathing-card" aria-live="polite">
             <h3>Breathing Exercise</h3>
-            <div
-              aria-label="Interaktive Atemkugel"
-              className="breath-orb"
-              onPointerMove={updateOrbDiameter}
-              role="img"
-              style={{
-                "--breathing-progress": `${((breathingDurationSeconds - secondsRemaining) / breathingDurationSeconds) * 100}%`,
-                "--orb-diameter": `${orbDiameter}rem`,
-                "--orb-gradient": "radial-gradient(circle at 35% 30%, var(--color-orb-start), var(--color-orb-middle) 55%, var(--color-orb-end))",
-              } as React.CSSProperties}
-            />
+            <BreathingAnimation />
             <p className="breathing-cue">{currentBreathingCue.label}</p>
             <p className="breathing-detail">{currentBreathingCue.detail}</p>
             <p className="breathing-countdown">
