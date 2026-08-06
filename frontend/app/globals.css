@@ -42,10 +42,37 @@ button {
 }
 
 button:focus-visible,
+ a:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
   outline: 3px solid rgba(185, 93, 60, 0.45);
   outline-offset: 3px;
+}
+
+.page-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+.page-nav a,
+.journal-heading a,
+.journal-empty-state a {
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-underline-offset: 0.2em;
+}
+
+.snapshot-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.snapshot-link:hover article {
+  border-color: var(--primary);
 }
 
 button:disabled {

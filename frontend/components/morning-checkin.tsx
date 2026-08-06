@@ -13,7 +13,6 @@ import type {
 const BREATHING_DURATION_SECONDS = 30;
 const BREATHING_CYCLE_SECONDS = 10;
 const QUESTION_COUNT = 6;
-const ACTIVE_CHECKIN_DATE_KEY = "morning-coach.active-checkin-date";
 
 const QUESTIONS = [
   "Wie fuehlst du dich heute Morgen auf einer Skala von 1 bis 5?",
@@ -30,6 +29,7 @@ type MorningCheckinProps = {
   breathingDurationSeconds?: number;
   onSnapshotCompleted: (snapshot: MorningCheckinResponse) => void;
   startCheckinRequest: number;
+  autoStart?: boolean;
 };
 
 function toBrowserDate(value: Date): string {
@@ -53,6 +53,7 @@ export function MorningCheckin({
   breathingDurationSeconds = BREATHING_DURATION_SECONDS,
   onSnapshotCompleted,
   startCheckinRequest,
+  autoStart = false,
 }: MorningCheckinProps) {
   const [viewState, setViewState] = useState<
     "start" | "breathing" | "questionnaire"
@@ -85,14 +86,6 @@ export function MorningCheckin({
         : "questionnaire",
     );
 
-    if (checkin.status === "unfinished") {
-      window.localStorage.setItem(
-        ACTIVE_CHECKIN_DATE_KEY,
-        checkin.browser_date,
-      );
-    } else {
-      window.localStorage.removeItem(ACTIVE_CHECKIN_DATE_KEY);
-    }
   }
 
   async function startMorningCheckin(isResuming = false): Promise<void> {
@@ -114,13 +107,10 @@ export function MorningCheckin({
   }
 
   useEffect(() => {
-    if (window.localStorage.getItem(ACTIVE_CHECKIN_DATE_KEY) === browserDate) {
-      setShouldResume(true);
-      void startMorningCheckin(true);
-    }
-    // The browser date determines whether a persisted routine may be resumed.
+    if (autoStart) void startMorningCheckin(true);
+    // A direct route reconstructs its state from the API for the browser-local date.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiClient, browserDate]);
+  }, [autoStart, apiClient, browserDate]);
 
   useEffect(() => {
     if (startCheckinRequest > 0) void startMorningCheckin(shouldResume);
@@ -210,10 +200,6 @@ export function MorningCheckin({
       setActiveCheckin(restarted);
       setCurrentQuestionNumber(restarted.next_question_number);
       setQuestionInput("");
-      window.localStorage.setItem(
-        ACTIVE_CHECKIN_DATE_KEY,
-        restarted.browser_date,
-      );
     } catch (caughtError) {
       setError(
         caughtError instanceof Error

@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 
 import { MOOD_LABELS } from "@/components/daily-snapshot";
 import type { MorningCheckinResponse } from "@/lib/api/types";
@@ -81,17 +82,19 @@ export function PersonalJournal({
             const mood = moodFor(snapshot);
             return (
               <li key={snapshot.id}>
-                <article aria-label={`Daily Snapshot vom ${snapshot.browser_date}`}>
-                  <p>{formatDate(snapshot.browser_date)}</p>
-                  <div>
-                    <span className="journal-mood">
-                      {mood === null
-                        ? "Stimmung nicht angegeben"
-                        : `Stimmung ${mood} von 5 - ${MOOD_LABELS[mood]}`}
-                    </span>
-                    <p>{previewFor(snapshot)}</p>
-                  </div>
-                </article>
+                <Link href={`/journal/${snapshot.id}`} className="snapshot-link">
+                  <article aria-label={`Daily Snapshot vom ${snapshot.browser_date}`}>
+                    <p>{formatDate(snapshot.browser_date)}</p>
+                    <div>
+                      <span className="journal-mood">
+                        {mood === null
+                          ? "Stimmung nicht angegeben"
+                          : `Stimmung ${mood} von 5 - ${MOOD_LABELS[mood]}`}
+                      </span>
+                      <p>{previewFor(snapshot)}</p>
+                    </div>
+                  </article>
+                </Link>
               </li>
             );
           })}
