@@ -137,11 +137,6 @@ export function HomeScreen({
           <h1 className="title">
             {greetingFor(today)}.<span>Nimm dir fünf Minuten.</span>
           </h1>
-          <p className="lead">
-            Erst 30 Sekunden atmen, dann sechs ruhige Fragen. Am Ende steht dein
-            Daily Snapshot mit Stimmung, Fokus und einer optionalen Coach
-            Summary.
-          </p>
         </header>
         <MorningCheckin
           apiClient={apiClient}

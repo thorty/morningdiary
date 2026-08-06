@@ -83,8 +83,8 @@ test("shows German base shell and privacy boundary", async () => {
   expect(screen.getByText("Dienstag, 4. August")).toBeInTheDocument();
   expect(screen.getByText("Guten Tag.")).toBeInTheDocument();
   expect(
-    screen.getByText(/Erst 30 Sekunden atmen, dann sechs ruhige Fragen/i),
-  ).toBeInTheDocument();
+    screen.queryByText(/Erst 30 Sekunden atmen, dann sechs ruhige Fragen/i),
+  ).not.toBeInTheDocument();
 
   await waitFor(() => {
     expect(screen.getByRole("status")).toHaveTextContent(
