@@ -33,7 +33,7 @@ export function MoodTrend({ snapshots }: { snapshots: MorningCheckinResponse[] }
   return (
     <section className="mood-history" aria-labelledby="mood-history-title">
       <div>
-        <p className="snapshot-kicker">Die letzten Eintraege</p>
+        <p className="snapshot-kicker">Die letzten Einträge</p>
         <h3 id="mood-history-title">Dein Stimmungsverlauf</h3>
       </div>
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={`Stimmungsverlauf: ${description}`}>

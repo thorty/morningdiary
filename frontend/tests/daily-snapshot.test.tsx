@@ -31,7 +31,7 @@ test("shows missing answers without dropping response rows", () => {
 });
 
 test("keeps a long unbroken response inside its row", () => {
-  const longAnswer = "Donaudampfschifffahrtsgesellschaftskapitaen".repeat(12);
+  const longAnswer = "Donaudampfschifffahrtsgesellschaftskapitän".repeat(12);
   render(<DailySnapshot snapshot={{ ...snapshot, answers: [4, longAnswer, null, null, null, null] }} />);
 
   expect(screen.getByText(longAnswer)).toHaveClass("snapshot-response-text");

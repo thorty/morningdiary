@@ -31,7 +31,7 @@ function apiClient(snapshots: MorningCheckinResponse[] = []): PersonalJournalApi
 
 test("the Personal Journal route shows Daily Snapshots newest first with their mood and preview", async () => {
   const client = apiClient([
-    snapshot("02", "Aeltere Notiz", 2),
+    snapshot("02", "Ältere Notiz", 2),
     snapshot("04", "Neueste Notiz", 5),
   ]);
 
@@ -75,7 +75,7 @@ test("the Personal Journal route reports when snapshots cannot load", async () =
   render(<PersonalJournalPage apiClient={client} />);
 
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "Die Personal Journal Eintraege konnten nicht geladen werden.",
+    "Die Personal Journal Einträge konnten nicht geladen werden.",
   );
 });
 

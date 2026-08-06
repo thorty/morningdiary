@@ -116,7 +116,7 @@ test("question cards show progress and preserve saved answers while navigating b
   expect(progress.children[0]).toHaveClass("completed");
   expect(progress.children[1]).toHaveClass("completed");
   expect(progress.children[2]).toHaveClass("current");
-  fireEvent.click(screen.getByRole("button", { name: "Zurueck" }));
+  fireEvent.click(screen.getByRole("button", { name: "Zurück" }));
 
   expect(screen.getByRole("heading", { name: "Frage 2 von 6", level: 3 })).toBeInTheDocument();
   expect(progress.children[0]).toHaveClass("completed");
@@ -141,7 +141,7 @@ test("mood question offers the five labelled face ratings", async () => {
     />,
   );
 
-  fireEvent.click(await screen.findByRole("button", { name: "Atemuebung ueberspringen" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Breathing Exercise überspringen" }));
   const ratings = await screen.findAllByRole("radio");
 
   expect(ratings).toHaveLength(5);
@@ -171,7 +171,7 @@ test("homepage keeps the current check-in action when journal loading fails", as
     listPersonalJournalSnapshots: async () => { throw new Error("unavailable"); },
   })} />);
   expect(await screen.findByRole("link", { name: "Morning Check-in starten" })).toHaveAttribute("href", "/check-in");
-  expect(screen.getByRole("alert")).toHaveTextContent("Die Personal Journal Eintraege konnten nicht geladen werden.");
+  expect(screen.getByRole("alert")).toHaveTextContent("Die Personal Journal Einträge konnten nicht geladen werden.");
 });
 
 test("personal journal links snapshots and supports its direct detail resolution", async () => {
@@ -234,7 +234,7 @@ test("direct Morning Check-in route renders a completed Daily Snapshot as immuta
   render(<MorningCheckinPage apiClient={makeMockClient({
     getOrCreateMorningCheckin: async () => ({ id: "checkin-1", browser_date: "2026-08-04", status: "completed", answers: [4, "Dankbar", null, null, null, null], next_question_number: null, coach_summary: "Ein guter Tag." }),
   })} />);
-  expect(await screen.findByText("Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.")).toBeInTheDocument();
+  expect(await screen.findByText("Dein Daily Snapshot ist abgeschlossen und bleibt unveränderlich.")).toBeInTheDocument();
   expect(screen.getByText("Ein guter Tag.")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Morning Check-in neu starten" })).not.toBeInTheDocument();
 });
@@ -248,7 +248,7 @@ test("direct Morning Check-in route completes the current check-in", async () =>
   })} />);
   fireEvent.click(await screen.findByRole("button", { name: "Antwort speichern und weiter" }));
   await waitFor(() => expect(completeMorningCheckin).toHaveBeenCalledWith("checkin-1"));
-  expect(screen.getByText("Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.")).toBeInTheDocument();
+  expect(screen.getByText("Dein Daily Snapshot ist abgeschlossen und bleibt unveränderlich.")).toBeInTheDocument();
 });
 
 test("personal journal reports export failures", async () => {

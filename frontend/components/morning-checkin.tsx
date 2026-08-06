@@ -17,9 +17,9 @@ const BREATHING_DURATION_SECONDS = 30;
 const BREATHING_CYCLE_SECONDS = 10;
 
 const QUESTION_CARDS = [
-  { kicker: "Ankommen", prompt: "Wie fuehlst du dich heute Morgen auf einer Skala von 1 bis 5?" },
-  { kicker: "Dankbarkeit", prompt: "Wofuer bist du heute dankbar?" },
-  { kicker: "Loslassen", prompt: "Was moechtest du heute bewusst loslassen?" },
+  { kicker: "Ankommen", prompt: "Wie fühlst du dich heute Morgen auf einer Skala von 1 bis 5?" },
+  { kicker: "Dankbarkeit", prompt: "Wofür bist du heute dankbar?" },
+  { kicker: "Loslassen", prompt: "Was möchtest du heute bewusst loslassen?" },
   { kicker: "Energie", prompt: "Was gibt dir heute Energie?" },
   { kicker: "Ein guter Tag", prompt: "Welche kleine Sache macht diesen Tag gut?" },
   { kicker: "Absicht", prompt: "Welche freundliche Absicht nimmst du in den Tag mit?" },
@@ -259,8 +259,8 @@ export function MorningCheckin({
     <section className="section" aria-label="Morning Check-in">
       <div className={`routine-card ${viewState === "breathing" ? "routine-card-breathing" : ""}`}>
         <div className="routine-card-heading">
-          <h2>Deine Routine fuer heute</h2>
-          <p>Ein kurzer Moment fuer Dankbarkeit und Klarheit.</p>
+          <h2>Deine Routine für heute</h2>
+          <p>Ein kurzer Moment für Dankbarkeit und Klarheit.</p>
         </div>
         {viewState === "start" ? (
           <>
@@ -286,7 +286,7 @@ export function MorningCheckin({
         ) : null}
         {viewState === "breathing" ? (
           <div className="breathing-card" aria-live="polite">
-            <h3>Atemuebung</h3>
+            <h3>Breathing Exercise</h3>
             <div
               className={`breath-orb ${currentBreathingCue.label === "Einatmen" ? "inhale" : "exhale"}`}
               aria-hidden="true"
@@ -300,7 +300,7 @@ export function MorningCheckin({
               {secondsRemaining} Sekunden verbleibend
             </p>
             <progress
-              aria-label="Fortschritt der Atemuebung"
+              aria-label="Fortschritt der Breathing Exercise"
               value={breathingDurationSeconds - secondsRemaining}
               max={breathingDurationSeconds}
             />
@@ -308,7 +308,7 @@ export function MorningCheckin({
               type="button"
               onClick={finishBreathing}
             >
-              Atemuebung ueberspringen
+              Breathing Exercise überspringen
             </button>
           </div>
         ) : null}
@@ -320,7 +320,7 @@ export function MorningCheckin({
               <>
                 <p>
                   Dein Daily Snapshot ist abgeschlossen und bleibt
-                  unveraenderlich.
+                  unveränderlich.
                 </p>
                 <DailySnapshot
                   snapshot={activeCheckin}
@@ -414,7 +414,7 @@ export function MorningCheckin({
                         onClick={goToPreviousQuestion}
                         disabled={isSaving}
                       >
-                        Zurueck
+                        Zurück
                       </button>
                     ) : null}
                   </>

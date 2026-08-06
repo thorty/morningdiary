@@ -21,7 +21,7 @@ export function PersonalJournalPage({ apiClient = defaultPersonalJournalApiClien
   useEffect(() => {
     void apiClient.listPersonalJournalSnapshots().then(
       (response) => setSnapshots(response),
-      () => setError("Die Personal Journal Eintraege konnten nicht geladen werden."),
+      () => setError("Die Personal Journal Einträge konnten nicht geladen werden."),
     ).finally(() => setIsLoading(false));
   }, [apiClient]);
 

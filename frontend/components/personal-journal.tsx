@@ -22,7 +22,7 @@ function previewFor(snapshot: MorningCheckinResponse): string {
   const response = snapshot.answers.slice(1).find(
     (answer) => typeof answer === "string" && answer.trim().length > 0,
   );
-  return typeof response === "string" ? response : "Keine Notiz fuer diesen Tag.";
+  return typeof response === "string" ? response : "Keine Notiz für diesen Tag.";
 }
 
 export function PersonalJournal({

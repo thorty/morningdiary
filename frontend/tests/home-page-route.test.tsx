@@ -64,7 +64,7 @@ test("the home route presents the daytime greeting, introduction, and routine", 
 
   expect(
     screen.getByRole("heading", {
-      name: /Guten (Morgen|Tag|Abend)\. Nimm dir fuenf Minuten\./,
+      name: /Guten (Morgen|Tag|Abend)\. Nimm dir fünf Minuten\./,
       level: 1,
     }),
   ).toBeInTheDocument();
@@ -73,7 +73,7 @@ test("the home route presents the daytime greeting, introduction, and routine", 
   ).toBeInTheDocument();
   expect(
     await screen.findByRole("heading", {
-      name: "Deine Routine fuer heute",
+      name: "Deine Routine für heute",
       level: 2,
     }),
   ).toBeInTheDocument();
@@ -133,12 +133,12 @@ test("the home route marks today's completed Morning Check-in without hiding jou
     await screen.findByRole("status", {
       name: "",
     }),
-  ).toHaveTextContent("Dein Morning Check-in fuer heute ist abgeschlossen.");
+  ).toHaveTextContent("Dein Morning Check-in für heute ist abgeschlossen.");
   expect(
     screen.getByRole("article", { name: "Daily Snapshot vom 2026-08-04" }),
   ).toBeInTheDocument();
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "Die Personal Journal Eintraege konnten nicht geladen werden.",
+    "Die Personal Journal Einträge konnten nicht geladen werden.",
   );
 });
 

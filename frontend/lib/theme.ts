@@ -4,7 +4,7 @@ export const themes = [
   { id: "orange", label: "Orange" },
   { id: "blue", label: "Blau" },
   { id: "purple", label: "Lila" },
-  { id: "green", label: "Gruen" },
+  { id: "green", label: "Grün" },
 ] as const;
 
 export type ThemeId = (typeof themes)[number]["id"];

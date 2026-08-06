@@ -65,7 +65,7 @@ test("shows German base shell and privacy boundary", async () => {
 
   expect(
     screen.getByRole("heading", {
-      name: "Guten Tag. Nimm dir fuenf Minuten.",
+      name: "Guten Tag. Nimm dir fünf Minuten.",
       level: 1,
     }),
   ).toBeInTheDocument();
@@ -75,7 +75,7 @@ test("shows German base shell and privacy boundary", async () => {
     ),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("heading", { name: "Deine Routine fuer heute", level: 2 }),
+    screen.getByRole("heading", { name: "Deine Routine für heute", level: 2 }),
   ).toBeInTheDocument();
   expect(
     screen.getByRole("heading", { name: "Personal Journal", level: 2 }),
@@ -146,11 +146,11 @@ test("starts check-in with browser-local date and can skip breathing exercise", 
     expect(getOrCreateMorningCheckin).toHaveBeenCalledWith("2026-08-04");
   });
   expect(
-    screen.getByRole("heading", { name: "Atemuebung", level: 3 }),
+    screen.getByRole("heading", { name: "Breathing Exercise", level: 3 }),
   ).toBeInTheDocument();
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+    screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
   );
 
   expect(
@@ -182,7 +182,7 @@ test("finishes breathing exercise and reaches first question", async () => {
 
   await waitFor(() => {
     expect(
-      screen.getByRole("heading", { name: "Atemuebung", level: 3 }),
+      screen.getByRole("heading", { name: "Breathing Exercise", level: 3 }),
     ).toBeInTheDocument();
   });
 
@@ -213,7 +213,7 @@ test("shows the breathing rhythm, countdown, and progress before automatically o
     expect(screen.getByText("Einatmen")).toBeInTheDocument();
     expect(screen.getByText("10 Sekunden verbleibend")).toBeInTheDocument();
     expect(
-      screen.getByRole("progressbar", { name: "Fortschritt der Atemuebung" }),
+      screen.getByRole("progressbar", { name: "Fortschritt der Breathing Exercise" }),
     ).toHaveValue(0);
 
     act(() => {
@@ -223,7 +223,7 @@ test("shows the breathing rhythm, countdown, and progress before automatically o
     expect(screen.getByText("Ausatmen")).toBeInTheDocument();
     expect(screen.getByText("6 Sekunden verbleibend")).toBeInTheDocument();
     expect(
-      screen.getByRole("progressbar", { name: "Fortschritt der Atemuebung" }),
+      screen.getByRole("progressbar", { name: "Fortschritt der Breathing Exercise" }),
     ).toHaveValue(4);
 
     act(() => {
@@ -273,7 +273,7 @@ test("keeps question one visible when the breathing timer fires after skipping",
     );
     await act(async () => {});
     fireEvent.click(
-      screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+      screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
     );
 
     act(() => {
@@ -284,7 +284,7 @@ test("keeps question one visible when the breathing timer fires after skipping",
       screen.getByRole("heading", { name: "Frage 1 von 6", level: 3 }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Atemuebung ueberspringen" }),
+      screen.queryByRole("button", { name: "Breathing Exercise überspringen" }),
     ).not.toBeInTheDocument();
   } finally {
     vi.useRealTimers();
@@ -356,12 +356,12 @@ test("saves mood answer and advances to next question", async () => {
   );
   await waitFor(() => {
     expect(
-      screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+      screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
     ).toBeInTheDocument();
   });
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+    screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
   );
   fireEvent.click(screen.getByRole("radio", { name: /4 Gut/ }));
   fireEvent.click(
@@ -451,11 +451,11 @@ test("keeps the question visible and allows retry when saving fails", async () =
   );
   await waitFor(() => {
     expect(
-      screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+      screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
     ).toBeInTheDocument();
   });
   fireEvent.click(
-    screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+    screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
   );
   fireEvent.click(screen.getByRole("radio", { name: /4 Gut/ }));
   fireEvent.click(
@@ -506,11 +506,11 @@ test("shows a saving state and prevents duplicate answer submissions", async () 
   );
   await waitFor(() => {
     expect(
-      screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+      screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
     ).toBeInTheDocument();
   });
   fireEvent.click(
-    screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+    screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
   );
   fireEvent.click(screen.getByRole("radio", { name: /4 Gut/ }));
   fireEvent.click(
@@ -608,7 +608,7 @@ test("allows retry when completion fails after the sixth saved response", async 
     expect(completeMorningCheckin).toHaveBeenCalledTimes(2);
     expect(
       screen.getByText(
-        "Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.",
+        "Dein Daily Snapshot ist abgeschlossen und bleibt unveränderlich.",
       ),
     ).toBeInTheDocument();
   });
@@ -647,11 +647,11 @@ test("marks the selected mood and saves its valid rating", async () => {
   );
   await waitFor(() => {
     expect(
-      screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+      screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
     ).toBeInTheDocument();
   });
   fireEvent.click(
-    screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+    screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
   );
 
   fireEvent.click(screen.getByRole("radio", { name: /5 Sehr gut/ }));
@@ -693,7 +693,7 @@ test("resumes an unfinished check-in at the next question", async () => {
     ).toBeInTheDocument();
   });
   expect(
-    screen.queryByRole("button", { name: "Atemuebung ueberspringen" }),
+    screen.queryByRole("button", { name: "Breathing Exercise überspringen" }),
   ).not.toBeInTheDocument();
 });
 
@@ -767,7 +767,7 @@ test("renders immutable completed daily snapshot when resumed as completed", asy
   await waitFor(() => {
     expect(
       screen.getByText(
-        "Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.",
+        "Dein Daily Snapshot ist abgeschlossen und bleibt unveränderlich.",
       ),
     ).toBeInTheDocument();
   });
@@ -901,11 +901,11 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
   );
   await waitFor(() => {
     expect(
-      screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+      screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
     ).toBeInTheDocument();
   });
   fireEvent.click(
-    screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+    screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
   );
 
   for (let index = 0; index < 6; index += 1) {
@@ -920,7 +920,7 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
   });
   expect(
     screen.getByText(
-      "Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.",
+      "Dein Daily Snapshot ist abgeschlossen und bleibt unveränderlich.",
     ),
   ).toBeInTheDocument();
   expect(screen.getByText("Stimmung: Nicht angegeben")).toBeInTheDocument();
@@ -1104,11 +1104,11 @@ test("renders generated coach summary after completing final answer", async () =
   );
   await waitFor(() => {
     expect(
-      screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+      screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
     ).toBeInTheDocument();
   });
   fireEvent.click(
-    screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+    screen.getByRole("button", { name: "Breathing Exercise überspringen" }),
   );
 
   fireEvent.click(screen.getByRole("radio", { name: /4 Gut/ }));
@@ -1257,7 +1257,7 @@ test("distinguishes an empty journal from a journal loading error", async () => 
       screen.getByRole("alert", {
         name: "",
       }),
-    ).toHaveTextContent("Die Personal Journal Eintraege konnten nicht geladen werden.");
+    ).toHaveTextContent("Die Personal Journal Einträge konnten nicht geladen werden.");
   });
   expect(screen.queryByText("Noch keine Daily Snapshots vorhanden.")).not.toBeInTheDocument();
 });

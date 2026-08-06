@@ -1,0 +1,69 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import React from "react";
+
+import { HomePage } from "@/components/home-page";
+import { MorningCheckinPage } from "@/components/morning-checkin-page";
+import { PersonalJournalPage } from "@/components/personal-journal-page";
+import type { PersonalJournalApiClient } from "@/lib/api/client";
+import type { MorningCheckinAnswer, MorningCheckinResponse } from "@/lib/api/types";
+
+const date = "2026-08-04";
+let checkin: MorningCheckinResponse = {
+  id: "today",
+  browser_date: date,
+  status: "unfinished",
+  answers: [null, null, null, null, null, null],
+  next_question_number: 1,
+  coach_summary: null,
+};
+
+function client(): PersonalJournalApiClient {
+  return {
+    getHealth: async () => ({ status: "ok" }),
+    getOrCreateMorningCheckin: async () => checkin,
+    saveMorningCheckinAnswer: async (_, { question_number, answer }) => {
+      const answers = [...checkin.answers] as MorningCheckinAnswer[];
+      answers[question_number - 1] = answer;
+      checkin = {
+        ...checkin,
+        answers,
+        next_question_number: question_number === 6 ? null : question_number + 1,
+      };
+      return checkin;
+    },
+    restartMorningCheckin: async () => checkin,
+    completeMorningCheckin: async () => {
+      checkin = { ...checkin, status: "completed", next_question_number: null };
+      return checkin;
+    },
+    listPersonalJournalSnapshots: async () =>
+      checkin.status === "completed" ? [checkin] : [],
+    exportPersonalJournal: async () => ({ snapshots: [] }),
+  };
+}
+
+test("takes a person from the start page through a Morning Check-in into their Personal Journal", async () => {
+  const apiClient = client();
+  const todayDateProvider = () => new Date("2026-08-04T12:00:00");
+  const { unmount } = render(<HomePage apiClient={apiClient} todayDateProvider={todayDateProvider} />);
+
+  expect(await screen.findByRole("link", { name: "Morning Check-in starten" })).toHaveAttribute("href", "/check-in");
+  unmount();
+
+  const checkinPage = render(<MorningCheckinPage apiClient={apiClient} todayDateProvider={todayDateProvider} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Breathing Exercise überspringen" }));
+
+  for (let question = 1; question <= 6; question += 1) {
+    if (question === 1) fireEvent.click(screen.getByRole("radio", { name: "4 Gut" }));
+    else fireEvent.change(screen.getByLabelText("Optionale Freitext-Antwort"), { target: { value: `Antwort ${question}` } });
+    fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
+    if (question < 6) await screen.findByRole("heading", { name: `Frage ${question + 1} von 6`, level: 3 });
+  }
+
+  expect(await screen.findByText("Dein Daily Snapshot ist abgeschlossen und bleibt unveränderlich.")).toBeInTheDocument();
+  checkinPage.unmount();
+
+  render(<PersonalJournalPage apiClient={apiClient} />);
+  await waitFor(() => expect(screen.getByRole("article", { name: "Daily Snapshot vom 2026-08-04" })).toBeInTheDocument());
+  expect(screen.getByRole("link", { name: "Zur Startseite" })).toHaveAttribute("href", "/");
+});

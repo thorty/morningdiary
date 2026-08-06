@@ -77,7 +77,7 @@ export function HomeScreen({
         () =>
           isMounted &&
           setJournalLoadError(
-            "Die Personal Journal Eintraege konnten nicht geladen werden.",
+            "Die Personal Journal Einträge konnten nicht geladen werden.",
           ),
       )
       .finally(() => isMounted && setIsJournalLoading(false));
@@ -135,7 +135,7 @@ export function HomeScreen({
         <header className="hero">
           <p className="date-label">{formattedDate}</p>
           <h1 className="title">
-            {greetingFor(today)}.<span>Nimm dir fuenf Minuten.</span>
+            {greetingFor(today)}.<span>Nimm dir fünf Minuten.</span>
           </h1>
           <p className="lead">
             Erst 30 Sekunden atmen, dann sechs ruhige Fragen. Am Ende steht dein
@@ -186,9 +186,9 @@ export function HomeScreen({
           {serviceStatus}
         </p>
         <p className="privacy-note">
-          Fuer die optionale Coach Summary werden nur Antworten aus dem
+          Für die optionale Coach Summary werden nur Antworten aus dem
           aktuellen Morning Check-in an OpenAI gesendet. Dein API-Key bleibt
-          ausschliesslich im Backend.
+          ausschließlich im Backend.
         </p>
       </div>
     </main>
