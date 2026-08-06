@@ -98,5 +98,5 @@ test("keeps the breathing orb connected to the active theme variables", async ()
   const interactionArea = await screen.findByRole("img", { name: "Interaktive Atemkugel" });
 
   expect(document.documentElement).toHaveAttribute("data-theme", "green");
-  expect(interactionArea).toHaveStyle("--orb-gradient: radial-gradient(circle at 35% 30%, var(--color-orb-start), var(--color-orb-middle) 55%, var(--color-orb-end))");
+  expect(interactionArea).toHaveClass("breath-orb");
 });

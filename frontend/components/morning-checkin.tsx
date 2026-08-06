@@ -311,7 +311,6 @@ export function MorningCheckin({
               style={{
                 "--breathing-progress": `${((breathingDurationSeconds - secondsRemaining) / breathingDurationSeconds) * 100}%`,
                 "--orb-diameter": `${orbDiameter}rem`,
-                "--orb-gradient": "radial-gradient(circle at 35% 30%, var(--color-orb-start), var(--color-orb-middle) 55%, var(--color-orb-end))",
               } as React.CSSProperties}
             />
             <p className="breathing-cue">{currentBreathingCue.label}</p>

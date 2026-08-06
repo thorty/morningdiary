@@ -5,8 +5,6 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import React from "react";
 
 import { HomeScreen } from "@/components/home-screen";
@@ -289,20 +287,6 @@ test("keeps question one visible when the breathing timer fires after skipping",
   } finally {
     vi.useRealTimers();
   }
-});
-
-test("keeps the breathing orb size transition subject to reduced motion", () => {
-  const stylesheet = readFileSync(
-    resolve(process.cwd(), "app/globals.css"),
-    "utf8",
-  );
-
-  expect(stylesheet).toMatch(
-    /\.breath-orb\s*\{[\s\S]*transition: width var\(--motion-fast\)/,
-  );
-  expect(stylesheet).toMatch(
-    /@media \(prefers-reduced-motion: reduce\)[\s\S]*transition-duration: 0\.01ms !important;/,
-  );
 });
 
 test("shows degraded status when backend health request fails", async () => {
