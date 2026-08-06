@@ -236,9 +236,7 @@ test("saves mood answer and advances to next question", async () => {
   });
 
   fireEvent.click(screen.getByRole("button", { name: "Atemuebung ueberspringen" }));
-  fireEvent.change(screen.getByLabelText("Optionale Stimmung (1 bis 5)"), {
-    target: { value: "4" },
-  });
+  fireEvent.click(screen.getByRole("radio", { name: /4 Gut/ }));
   fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
 
   await waitFor(() => {
@@ -250,8 +248,186 @@ test("saves mood answer and advances to next question", async () => {
   expect(screen.getByRole("heading", { name: "Frage 2 von 6", level: 3 })).toBeInTheDocument();
 });
 
-test("shows validation message for invalid mood input", async () => {
-  const saveMorningCheckinAnswer = vi.fn<PersonalJournalApiClient["saveMorningCheckinAnswer"]>();
+test("saves an optional free-text answer before advancing", async () => {
+  const saveMorningCheckinAnswer = vi
+    .fn<PersonalJournalApiClient["saveMorningCheckinAnswer"]>()
+    .mockResolvedValue({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [4, "Ein ruhiger Kaffee", null, null, null, null],
+      next_question_number: 3,
+      coach_summary: null,
+    });
+
+  render(
+    <HomeScreen
+      apiClient={makeMockClient({
+        saveMorningCheckinAnswer,
+        getOrCreateMorningCheckin: async () => ({
+          id: "checkin-1",
+          browser_date: "2026-08-04",
+          status: "unfinished",
+          answers: [4, null, null, null, null, null],
+          next_question_number: 2,
+          coach_summary: null,
+        }),
+      })}
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Morning Check-in starten" }));
+  await waitFor(() => {
+    expect(screen.getByRole("heading", { name: "Frage 2 von 6", level: 3 })).toBeInTheDocument();
+  });
+  fireEvent.change(screen.getByLabelText("Optionale Freitext-Antwort"), {
+    target: { value: "Ein ruhiger Kaffee" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
+
+  await waitFor(() => {
+    expect(saveMorningCheckinAnswer).toHaveBeenCalledWith("checkin-1", {
+      question_number: 2,
+      answer: "Ein ruhiger Kaffee",
+    });
+  });
+});
+
+test("keeps the question visible and allows retry when saving fails", async () => {
+  const saveMorningCheckinAnswer = vi
+    .fn<PersonalJournalApiClient["saveMorningCheckinAnswer"]>()
+    .mockRejectedValueOnce(new Error("Speichern fehlgeschlagen"))
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [4, null, null, null, null, null],
+      next_question_number: 2,
+      coach_summary: null,
+    });
+
+  render(<HomeScreen apiClient={makeMockClient({ saveMorningCheckinAnswer })} />);
+  fireEvent.click(screen.getByRole("button", { name: "Morning Check-in starten" }));
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Atemuebung ueberspringen" })).toBeInTheDocument();
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Atemuebung ueberspringen" }));
+  fireEvent.click(screen.getByRole("radio", { name: /4 Gut/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
+
+  await waitFor(() => {
+    expect(screen.getByRole("alert")).toHaveTextContent("Speichern fehlgeschlagen");
+  });
+  expect(screen.getByRole("heading", { name: "Frage 1 von 6", level: 3 })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
+  await waitFor(() => {
+    expect(screen.getByRole("heading", { name: "Frage 2 von 6", level: 3 })).toBeInTheDocument();
+  });
+});
+
+test("shows a saving state and prevents duplicate answer submissions", async () => {
+  let resolveSave: ((response: Awaited<ReturnType<PersonalJournalApiClient["saveMorningCheckinAnswer"]>>) => void) | undefined;
+  const saveMorningCheckinAnswer = vi
+    .fn<PersonalJournalApiClient["saveMorningCheckinAnswer"]>()
+    .mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSave = resolve;
+        }),
+    );
+
+  render(<HomeScreen apiClient={makeMockClient({ saveMorningCheckinAnswer })} />);
+  fireEvent.click(screen.getByRole("button", { name: "Morning Check-in starten" }));
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Atemuebung ueberspringen" })).toBeInTheDocument();
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Atemuebung ueberspringen" }));
+  fireEvent.click(screen.getByRole("radio", { name: /4 Gut/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
+
+  expect(screen.getByRole("button", { name: "Antwort wird gespeichert..." })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Morning Check-in neu starten" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Antwort wird gespeichert..." }));
+  expect(saveMorningCheckinAnswer).toHaveBeenCalledTimes(1);
+
+  resolveSave?.({
+    id: "abc",
+    browser_date: "2026-08-04",
+    status: "unfinished",
+    answers: [4, null, null, null, null, null],
+    next_question_number: 2,
+    coach_summary: null,
+  });
+  await waitFor(() => {
+    expect(screen.getByRole("heading", { name: "Frage 2 von 6", level: 3 })).toBeInTheDocument();
+  });
+});
+
+test("allows retry when completion fails after the sixth saved response", async () => {
+  const saveMorningCheckinAnswer = vi.fn<PersonalJournalApiClient["saveMorningCheckinAnswer"]>().mockResolvedValue({
+    id: "checkin-1",
+    browser_date: "2026-08-04",
+    status: "unfinished",
+    answers: [null, null, null, null, null, null],
+    next_question_number: null,
+    coach_summary: null,
+  });
+  const completeMorningCheckin = vi
+    .fn<PersonalJournalApiClient["completeMorningCheckin"]>()
+    .mockRejectedValueOnce(new Error("Abschluss fehlgeschlagen"))
+    .mockResolvedValueOnce({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "completed",
+      answers: [null, null, null, null, null, null],
+      next_question_number: null,
+      coach_summary: null,
+    });
+
+  render(
+    <HomeScreen
+      apiClient={makeMockClient({
+        saveMorningCheckinAnswer,
+        completeMorningCheckin,
+        getOrCreateMorningCheckin: async () => ({
+          id: "checkin-1",
+          browser_date: "2026-08-04",
+          status: "unfinished",
+          answers: [null, null, null, null, null, null],
+          next_question_number: 6,
+          coach_summary: null,
+        }),
+      })}
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Morning Check-in starten" }));
+  await waitFor(() => {
+    expect(screen.getByRole("heading", { name: "Frage 6 von 6", level: 3 })).toBeInTheDocument();
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
+
+  await waitFor(() => {
+    expect(screen.getByRole("alert")).toHaveTextContent("Abschluss fehlgeschlagen");
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Abschluss erneut versuchen" }));
+
+  await waitFor(() => {
+    expect(completeMorningCheckin).toHaveBeenCalledTimes(2);
+    expect(screen.getByText("Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.")).toBeInTheDocument();
+  });
+});
+
+test("marks the selected mood and saves its valid rating", async () => {
+  const saveMorningCheckinAnswer = vi.fn<PersonalJournalApiClient["saveMorningCheckinAnswer"]>().mockResolvedValue({
+    id: "checkin-1",
+    browser_date: "2026-08-04",
+    status: "unfinished",
+    answers: [5, null, null, null, null, null],
+    next_question_number: 2,
+    coach_summary: null,
+  });
 
   render(
     <HomeScreen
@@ -277,13 +453,16 @@ test("shows validation message for invalid mood input", async () => {
   });
   fireEvent.click(screen.getByRole("button", { name: "Atemuebung ueberspringen" }));
 
-  fireEvent.change(screen.getByLabelText("Optionale Stimmung (1 bis 5)"), {
-    target: { value: "9" },
-  });
+  fireEvent.click(screen.getByRole("radio", { name: /5 Sehr gut/ }));
+  expect(screen.getByRole("radio", { name: /5 Sehr gut/ })).toBeChecked();
   fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
 
-  expect(saveMorningCheckinAnswer).not.toHaveBeenCalled();
-  expect(screen.getByText("Bitte gib fuer die Stimmung eine Zahl zwischen 1 und 5 ein.")).toBeInTheDocument();
+  await waitFor(() => {
+    expect(saveMorningCheckinAnswer).toHaveBeenCalledWith("checkin-1", {
+      question_number: 1,
+      answer: 5,
+    });
+  });
 });
 
 test("resumes an unfinished check-in at the next question", async () => {
@@ -589,7 +768,7 @@ test("renders generated coach summary after completing final answer", async () =
   });
   fireEvent.click(screen.getByRole("button", { name: "Atemuebung ueberspringen" }));
 
-  fireEvent.change(screen.getByLabelText("Optionale Stimmung (1 bis 5)"), { target: { value: "4" } });
+  fireEvent.click(screen.getByRole("radio", { name: /4 Gut/ }));
   fireEvent.click(screen.getByRole("button", { name: /Antwort speichern/ }));
   for (let index = 0; index < 5; index += 1) {
     await waitFor(() => {

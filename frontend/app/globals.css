@@ -24,7 +24,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -33,7 +34,8 @@ button {
 }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+textarea:focus-visible {
   outline: 3px solid rgba(185, 93, 60, 0.45);
   outline-offset: 3px;
 }
@@ -105,6 +107,107 @@ h3 {
   border-radius: 1.75rem;
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.question-prompt {
+  margin: 0.5rem 0 1.5rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 4vw, 1.8rem);
+  line-height: 1.25;
+}
+
+.question-card label,
+.mood-picker legend {
+  display: block;
+  margin-bottom: 0.55rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.question-card textarea {
+  display: block;
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  padding: 0.85rem;
+  color: var(--ink);
+  background: #fff;
+  line-height: 1.5;
+}
+
+.question-card > button,
+.mood-picker + button {
+  margin-top: 1rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.75rem 1.1rem;
+  color: #fffaf1;
+  background: var(--primary);
+  font-weight: 700;
+}
+
+.question-card > .secondary-action {
+  color: var(--muted);
+  background: transparent;
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.mood-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.mood-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.mood-option {
+  position: relative;
+  display: block;
+  min-height: 4.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  padding: 0.45rem 0.2rem;
+  color: var(--ink);
+  background: #fff;
+}
+
+.mood-option:has(input:checked) {
+  border-color: var(--primary);
+  color: #fffaf1;
+  background: var(--primary);
+}
+
+.mood-option input {
+  position: absolute;
+  opacity: 0;
+}
+
+.mood-option:has(input:focus-visible) {
+  outline: 3px solid rgba(185, 93, 60, 0.45);
+  outline-offset: 3px;
+}
+
+.mood-option span,
+.mood-option small {
+  display: block;
+}
+
+.mood-option span {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+}
+
+.mood-option small {
+  margin-top: 0.2rem;
+  font-size: 0.62rem;
 }
 
 .routine-card {

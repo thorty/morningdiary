@@ -178,6 +178,22 @@ export function HomeScreen({
     setQuestionInput(String(answer));
   }, [activeCheckin, currentQuestionNumber]);
 
+  async function completeCheckin(checkinId: string): Promise<void> {
+    setIsCompleting(true);
+    setQuestionError(null);
+
+    try {
+      const completedCheckin = await apiClient.completeMorningCheckin(checkinId);
+      setActiveCheckin(completedCheckin);
+      setCurrentQuestionNumber(completedCheckin.next_question_number);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Der Daily Snapshot konnte nicht abgeschlossen werden.";
+      setQuestionError(message);
+    } finally {
+      setIsCompleting(false);
+    }
+  }
+
   async function submitCurrentAnswer(): Promise<void> {
     if (!activeCheckin || currentQuestionNumber === null) {
       return;
@@ -189,12 +205,7 @@ export function HomeScreen({
     }
 
     if (currentQuestionNumber === 1 && answerPayload !== null) {
-      const parsedValue = Number(answerPayload);
-      if (!Number.isInteger(parsedValue) || parsedValue < 1 || parsedValue > 5) {
-        setQuestionError("Bitte gib fuer die Stimmung eine Zahl zwischen 1 und 5 ein.");
-        return;
-      }
-      answerPayload = parsedValue;
+      answerPayload = Number(answerPayload);
     }
 
     setIsSaving(true);
@@ -209,14 +220,7 @@ export function HomeScreen({
       setCurrentQuestionNumber(updatedCheckin.next_question_number);
 
       if (updatedCheckin.next_question_number === null) {
-        setIsCompleting(true);
-        try {
-          const completedCheckin = await apiClient.completeMorningCheckin(updatedCheckin.id);
-          setActiveCheckin(completedCheckin);
-          setCurrentQuestionNumber(completedCheckin.next_question_number);
-        } finally {
-          setIsCompleting(false);
-        }
+        await completeCheckin(updatedCheckin.id);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Die Antwort konnte nicht gespeichert werden.";
@@ -345,7 +349,7 @@ export function HomeScreen({
               {isCompletedSnapshot ? (
                 <p>Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.</p>
               ) : (
-                <p>{currentPrompt}</p>
+                  <p className="question-prompt">{currentPrompt}</p>
               )}
 
               {isCompletedSnapshot ? (
@@ -364,33 +368,61 @@ export function HomeScreen({
 
               {currentQuestionNumber !== null && !isCompletedSnapshot ? (
                 <>
-                  <label htmlFor="question-input">
-                    {currentQuestionNumber === 1
-                      ? "Optionale Stimmung (1 bis 5)"
-                      : "Optionale Freitext-Antwort"}
-                  </label>
-                  <input
-                    id="question-input"
-                    name="question-input"
-                    type={currentQuestionNumber === 1 ? "number" : "text"}
-                    min={currentQuestionNumber === 1 ? 1 : undefined}
-                    max={currentQuestionNumber === 1 ? 5 : undefined}
-                    value={questionInput}
-                    onChange={(event) => setQuestionInput(event.target.value)}
-                  />
+                  {currentQuestionNumber === 1 ? (
+                    <fieldset className="mood-picker" disabled={isSaving}>
+                      <legend>Optionale Stimmung</legend>
+                      <div className="mood-options">
+                        {[1, 2, 3, 4, 5].map((rating) => (
+                          <label className="mood-option" key={rating}>
+                            <input
+                              checked={questionInput === String(rating)}
+                              name="mood-rating"
+                              onChange={() => setQuestionInput(String(rating))}
+                              type="radio"
+                              value={rating}
+                            />
+                            <span>{rating}</span>
+                            <small>{["Sehr schwer", "Schwer", "Ausgeglichen", "Gut", "Sehr gut"][rating - 1]}</small>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  ) : (
+                    <>
+                      <label htmlFor="question-input">Optionale Freitext-Antwort</label>
+                      <textarea
+                        id="question-input"
+                        name="question-input"
+                        onChange={(event) => setQuestionInput(event.target.value)}
+                        placeholder="Schreib auf, was gerade da ist."
+                        rows={5}
+                        value={questionInput}
+                      />
+                    </>
+                  )}
                   <button type="button" onClick={() => void submitCurrentAnswer()} disabled={isSaving}>
                     {isSaving ? "Antwort wird gespeichert..." : "Antwort speichern und weiter"}
                   </button>
                 </>
               ) : null}
 
+              {currentQuestionNumber === null && !isCompletedSnapshot && activeCheckin ? (
+                <button type="button" onClick={() => void completeCheckin(activeCheckin.id)} disabled={isCompleting}>
+                  {isCompleting ? "Daily Snapshot wird abgeschlossen..." : "Abschluss erneut versuchen"}
+                </button>
+              ) : null}
+
               {!isCompletedSnapshot ? (
-                <button type="button" onClick={() => void restartCheckin()} disabled={isRestarting || isCompleting}>
+                <button
+                  className="secondary-action"
+                  type="button"
+                  onClick={() => void restartCheckin()}
+                  disabled={isSaving || isRestarting || isCompleting}
+                >
                   {isRestarting ? "Starte neu..." : "Morning Check-in neu starten"}
                 </button>
               ) : null}
-              {isCompleting ? <p className="status">Daily Snapshot wird abgeschlossen...</p> : null}
-              {questionError ? <p className="status">{questionError}</p> : null}
+              {questionError ? <p className="status" role="alert">{questionError}</p> : null}
             </div>
           ) : null}
 
