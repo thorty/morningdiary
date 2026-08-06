@@ -4,12 +4,11 @@ import Link from "next/link";
 import React from "react";
 
 import { MorningCheckin } from "@/components/morning-checkin";
-import { createHttpPersonalJournalApiClient, type PersonalJournalApiClient } from "@/lib/api/client";
-
-const defaultClient = createHttpPersonalJournalApiClient();
+import type { PersonalJournalApiClient } from "@/lib/api/client";
+import { defaultPersonalJournalApiClient } from "@/lib/api/default-client";
 
 export function MorningCheckinPage({
-  apiClient = defaultClient,
+  apiClient = defaultPersonalJournalApiClient,
   todayDateProvider = () => new Date(),
 }: {
   apiClient?: PersonalJournalApiClient;

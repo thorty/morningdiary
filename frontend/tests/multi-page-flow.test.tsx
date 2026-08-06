@@ -115,3 +115,27 @@ test("direct Morning Check-in route renders a completed Daily Snapshot as immuta
   expect(screen.getByText("Ein guter Tag.")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Morning Check-in neu starten" })).not.toBeInTheDocument();
 });
+
+test("direct Morning Check-in route completes the current check-in", async () => {
+  const completeMorningCheckin = vi.fn<PersonalJournalApiClient["completeMorningCheckin"]>().mockResolvedValue({ id: "checkin-1", browser_date: "2026-08-04", status: "completed", answers: [null, null, null, null, null, null], next_question_number: null, coach_summary: null });
+  render(<MorningCheckinPage apiClient={makeMockClient({
+    getOrCreateMorningCheckin: async () => ({ id: "checkin-1", browser_date: "2026-08-04", status: "unfinished", answers: [null, null, null, null, null, null], next_question_number: 6, coach_summary: null }),
+    saveMorningCheckinAnswer: async () => ({ id: "checkin-1", browser_date: "2026-08-04", status: "unfinished", answers: [null, null, null, null, null, null], next_question_number: null, coach_summary: null }),
+    completeMorningCheckin,
+  })} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Antwort speichern und weiter" }));
+  await waitFor(() => expect(completeMorningCheckin).toHaveBeenCalledWith("checkin-1"));
+  expect(screen.getByText("Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.")).toBeInTheDocument();
+});
+
+test("personal journal reports export failures", async () => {
+  render(<PersonalJournalPage apiClient={makeMockClient({ exportPersonalJournal: async () => { throw new Error("unavailable"); } })} />);
+  fireEvent.click(screen.getByRole("button", { name: "Journal Export herunterladen" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Der Journal Export konnte nicht heruntergeladen werden.");
+});
+
+test("detail route keeps loading failures separate from unknown IDs", async () => {
+  render(<DailySnapshotPage id="snapshot-1" apiClient={makeMockClient({ listPersonalJournalSnapshots: async () => { throw new Error("unavailable"); } })} />);
+  expect(await screen.findByRole("alert")).toHaveTextContent("Der Daily Snapshot konnte nicht geladen werden.");
+  expect(screen.queryByText("Daily Snapshot nicht gefunden")).not.toBeInTheDocument();
+});
