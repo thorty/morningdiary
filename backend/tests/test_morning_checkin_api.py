@@ -563,6 +563,31 @@ def test_completion_uses_german_fallback_note_when_summary_generation_fails(tmp_
     assert response.json()["coach_summary"] == "Deine Zusammenfassung konnte heute nicht erstellt werden."
 
 
+def test_completed_snapshot_retries_a_failed_coach_summary_without_changing_answers(tmp_path: Path) -> None:
+    fake_generator = FakeSummaryGenerator(raises=True)
+    settings = Settings(tinydb_path=tmp_path / "journal.json")
+    client = TestClient(create_app(settings, coach_summary_generator=fake_generator))
+
+    checkin = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    checkin_id = checkin["id"]
+    for question_number in range(1, 7):
+        client.post(
+            f"/api/morning-checkin/{checkin_id}/answers",
+            json={"question_number": question_number, "answer": "Eine Antwort" if question_number == 2 else None},
+        )
+
+    first_completion = client.post(f"/api/morning-checkin/{checkin_id}/complete")
+    fake_generator.raises = False
+    fake_generator.response_text = "Ein neuer, freundlicher Blick auf deinen Tag."
+    retry = client.post(f"/api/morning-checkin/{checkin_id}/complete")
+
+    assert first_completion.json()["coach_summary"] == "Deine Zusammenfassung konnte heute nicht erstellt werden."
+    assert retry.json()["status"] == "completed"
+    assert retry.json()["answers"] == [None, "Eine Antwort", None, None, None, None]
+    assert retry.json()["coach_summary"] == "Ein neuer, freundlicher Blick auf deinen Tag."
+    assert len(fake_generator.calls) == 2
+
+
 def test_completion_uses_german_fallback_note_when_generator_returns_no_text(tmp_path: Path) -> None:
     fake_generator = FakeSummaryGenerator(response_text=None)
     settings = Settings(tinydb_path=tmp_path / "journal.json")

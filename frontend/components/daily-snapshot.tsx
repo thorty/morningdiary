@@ -22,6 +22,9 @@ export const MOOD_LABELS: Record<number, string> = {
   5: "Sehr gut",
 };
 
+export const COACH_SUMMARY_UNAVAILABLE_NOTE =
+  "Deine Zusammenfassung konnte heute nicht erstellt werden.";
+
 function responseText(answer: MorningCheckinAnswer, index: number): string {
   if (answer === null || answer === undefined || answer === "") {
     return "Keine Antwort";
@@ -36,8 +39,12 @@ function responseText(answer: MorningCheckinAnswer, index: number): string {
 
 export function DailySnapshot({
   snapshot,
+  summaryState = "ready",
+  onRetry,
 }: {
   snapshot: MorningCheckinResponse;
+  summaryState?: "loading" | "ready" | "error";
+  onRetry?: () => void;
 }) {
   return (
     <article
@@ -70,7 +77,29 @@ export function DailySnapshot({
         <p id={`coach-summary-${snapshot.id}`} className="snapshot-kicker">
           Dein Coach
         </p>
-        {snapshot.coach_summary ? (
+        {summaryState === "loading" ? (
+          <div className="snapshot-summary-loading" role="status">
+            <p>
+              Die Coach Summary wird erstellt. Dein Daily Snapshot ist bereits
+              vollständig gespeichert.
+            </p>
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+          </div>
+        ) : summaryState === "error" ? (
+          <div className="snapshot-summary-error">
+            <p>
+              Die Coach Summary konnte gerade nicht erstellt werden. Dein Daily
+              Snapshot bleibt vollständig gespeichert.
+            </p>
+            {onRetry ? (
+              <button type="button" onClick={onRetry}>
+                Coach Summary erneut versuchen
+              </button>
+            ) : null}
+          </div>
+        ) : snapshot.coach_summary ? (
           <p>{snapshot.coach_summary}</p>
         ) : (
           <p>
@@ -87,7 +116,7 @@ export function DailySnapshot({
         <p id={`responses-${snapshot.id}`} className="snapshot-kicker">
           Deine Antworten
         </p>
-        <ol>
+        <ol aria-labelledby={`responses-${snapshot.id}`}>
           {RESPONSE_LABELS.map((label, index) => (
             <li key={label}>
               <span>{label}</span>

@@ -174,7 +174,12 @@ def create_app(
         )
 
         has_any_answer = any(answer is not None for answer in checkin["answers"])
-        if completion_outcome != "newly_completed":
+        can_retry_failed_summary = (
+            has_any_answer
+            and checkin["coach_summary"] == COACH_SUMMARY_UNAVAILABLE_NOTE
+            and configured_generator is not None
+        )
+        if completion_outcome != "newly_completed" and not can_retry_failed_summary:
             _log_info(
                 logger,
                 "morning_checkin_completion_idempotent",
@@ -194,7 +199,10 @@ def create_app(
             browser_date=checkin["browser_date"].isoformat(),
         )
 
-        if has_any_answer and checkin["coach_summary"] is None:
+        if has_any_answer and (
+            checkin["coach_summary"] is None
+            or checkin["coach_summary"] == COACH_SUMMARY_UNAVAILABLE_NOTE
+        ):
             if configured_generator is None:
                 checkin = store.save_coach_summary(checkin_id, COACH_SUMMARY_UNAVAILABLE_NOTE)
                 _log_info(

@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
-import { DailySnapshot, MOOD_LABELS } from "@/components/daily-snapshot";
+import {
+  COACH_SUMMARY_UNAVAILABLE_NOTE,
+  DailySnapshot,
+  MOOD_LABELS,
+} from "@/components/daily-snapshot";
 import type { PersonalJournalApiClient } from "@/lib/api/client";
 import type {
   MorningCheckinAnswer,
@@ -319,7 +323,17 @@ export function MorningCheckin({
                   Dein Daily Snapshot ist abgeschlossen und bleibt
                   unveraenderlich.
                 </p>
-                <DailySnapshot snapshot={activeCheckin} />
+                <DailySnapshot
+                  snapshot={activeCheckin}
+                  summaryState={
+                    isCompleting
+                      ? "loading"
+                      : activeCheckin.coach_summary === COACH_SUMMARY_UNAVAILABLE_NOTE
+                        ? "error"
+                        : "ready"
+                  }
+                  onRetry={() => void completeCheckin(activeCheckin.id)}
+                />
               </>
             ) : (
               <>
