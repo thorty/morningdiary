@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import React from "react";
 
 import { HomePage } from "@/components/home-page";
@@ -45,6 +45,13 @@ test("the Personal Journal route shows Daily Snapshots newest first with their m
   ]);
   expect(screen.getByText("Stimmung 5 von 5 - Sehr gut")).toBeInTheDocument();
   expect(screen.getByText("Neueste Notiz")).toBeInTheDocument();
+  expect(
+    within(
+      screen.getByRole("list", { name: "Stimmungswerte der letzten Tage" }),
+    )
+      .getAllByRole("listitem")
+      .map((entry) => entry.textContent),
+  ).toEqual(["Di., 4. Aug. 20265 / 5", "So., 2. Aug. 20262 / 5"]);
 });
 
 test("the Personal Journal route distinguishes loading and empty states and starts a Morning Check-in", async () => {

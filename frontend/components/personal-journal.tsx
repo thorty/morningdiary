@@ -45,7 +45,7 @@ export function PersonalJournal({
   const sortedSnapshots = [...snapshots].sort((first, second) =>
     second.browser_date.localeCompare(first.browser_date),
   );
-  const moodSnapshots = snapshots
+  const moodSnapshots = sortedSnapshots
     .filter((snapshot) => moodFor(snapshot) !== null)
     .slice(0, 10);
 
