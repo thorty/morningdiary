@@ -7,7 +7,11 @@ import {
   createHttpPersonalJournalApiClient,
   type PersonalJournalApiClient,
 } from "@/lib/api/client";
-import type { MorningCheckinAnswer, MorningCheckinResponse } from "@/lib/api/types";
+import type {
+  MorningCheckinAnswer,
+  MorningCheckinResponse,
+} from "@/lib/api/types";
+import { DailySnapshot } from "@/components/daily-snapshot";
 
 type HomeScreenProps = {
   apiClient?: PersonalJournalApiClient;
@@ -36,7 +40,10 @@ function toBrowserDate(value: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function breathingCue(secondsRemaining: number, totalDurationSeconds: number): { label: string; detail: string } {
+function breathingCue(
+  secondsRemaining: number,
+  totalDurationSeconds: number,
+): { label: string; detail: string } {
   const elapsed = totalDurationSeconds - secondsRemaining;
   const cyclePosition = elapsed % BREATHING_CYCLE_SECONDS;
   if (cyclePosition < 4) {
@@ -61,11 +68,20 @@ export function HomeScreen({
   todayDateProvider = () => new Date(),
   breathingDurationSeconds = BREATHING_DURATION_SECONDS,
 }: HomeScreenProps) {
-  const [serviceStatus, setServiceStatus] = useState("Verbinde mit dem Journal-Service...");
-  const [viewState, setViewState] = useState<"start" | "breathing" | "questionnaire">("start");
-  const [secondsRemaining, setSecondsRemaining] = useState(breathingDurationSeconds);
-  const [activeCheckin, setActiveCheckin] = useState<MorningCheckinResponse | null>(null);
-  const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number | null>(1);
+  const [serviceStatus, setServiceStatus] = useState(
+    "Verbinde mit dem Journal-Service...",
+  );
+  const [viewState, setViewState] = useState<
+    "start" | "breathing" | "questionnaire"
+  >("start");
+  const [secondsRemaining, setSecondsRemaining] = useState(
+    breathingDurationSeconds,
+  );
+  const [activeCheckin, setActiveCheckin] =
+    useState<MorningCheckinResponse | null>(null);
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState<
+    number | null
+  >(1);
   const [questionInput, setQuestionInput] = useState("");
   const [isStarting, setIsStarting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -73,9 +89,13 @@ export function HomeScreen({
   const [isCompleting, setIsCompleting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [questionError, setQuestionError] = useState<string | null>(null);
-  const [journalSnapshots, setJournalSnapshots] = useState<MorningCheckinResponse[]>([]);
+  const [journalSnapshots, setJournalSnapshots] = useState<
+    MorningCheckinResponse[]
+  >([]);
   const [journalLoadError, setJournalLoadError] = useState<string | null>(null);
-  const [journalExportError, setJournalExportError] = useState<string | null>(null);
+  const [journalExportError, setJournalExportError] = useState<string | null>(
+    null,
+  );
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
@@ -109,7 +129,9 @@ export function HomeScreen({
       })
       .catch(() => {
         if (isMounted) {
-          setJournalLoadError("Die Personal Journal Eintraege konnten nicht geladen werden.");
+          setJournalLoadError(
+            "Die Personal Journal Eintraege konnten nicht geladen werden.",
+          );
         }
       });
 
@@ -150,9 +172,15 @@ export function HomeScreen({
       setCurrentQuestionNumber(checkin.next_question_number);
       setSecondsRemaining(breathingDurationSeconds);
       setQuestionError(null);
-      setViewState(checkin.status === "unfinished" && checkin.next_question_number === 1 ? "breathing" : "questionnaire");
+      setViewState(
+        checkin.status === "unfinished" && checkin.next_question_number === 1
+          ? "breathing"
+          : "questionnaire",
+      );
     } catch {
-      setStartError("Der Morning Check-in konnte gerade nicht gestartet werden.");
+      setStartError(
+        "Der Morning Check-in konnte gerade nicht gestartet werden.",
+      );
     } finally {
       setIsStarting(false);
     }
@@ -183,11 +211,15 @@ export function HomeScreen({
     setQuestionError(null);
 
     try {
-      const completedCheckin = await apiClient.completeMorningCheckin(checkinId);
+      const completedCheckin =
+        await apiClient.completeMorningCheckin(checkinId);
       setActiveCheckin(completedCheckin);
       setCurrentQuestionNumber(completedCheckin.next_question_number);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Der Daily Snapshot konnte nicht abgeschlossen werden.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Der Daily Snapshot konnte nicht abgeschlossen werden.";
       setQuestionError(message);
     } finally {
       setIsCompleting(false);
@@ -212,10 +244,13 @@ export function HomeScreen({
     setQuestionError(null);
 
     try {
-      const updatedCheckin = await apiClient.saveMorningCheckinAnswer(activeCheckin.id, {
-        question_number: currentQuestionNumber,
-        answer: answerPayload,
-      });
+      const updatedCheckin = await apiClient.saveMorningCheckinAnswer(
+        activeCheckin.id,
+        {
+          question_number: currentQuestionNumber,
+          answer: answerPayload,
+        },
+      );
       setActiveCheckin(updatedCheckin);
       setCurrentQuestionNumber(updatedCheckin.next_question_number);
 
@@ -223,7 +258,10 @@ export function HomeScreen({
         await completeCheckin(updatedCheckin.id);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Die Antwort konnte nicht gespeichert werden.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Die Antwort konnte nicht gespeichert werden.";
       setQuestionError(message);
     } finally {
       setIsSaving(false);
@@ -244,7 +282,10 @@ export function HomeScreen({
       setCurrentQuestionNumber(restarted.next_question_number);
       setQuestionInput("");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Der Morning Check-in konnte nicht neu gestartet werden.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Der Morning Check-in konnte nicht neu gestartet werden.";
       setQuestionError(message);
     } finally {
       setIsRestarting(false);
@@ -269,7 +310,9 @@ export function HomeScreen({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch {
-      setJournalExportError("Der Journal Export konnte nicht heruntergeladen werden.");
+      setJournalExportError(
+        "Der Journal Export konnte nicht heruntergeladen werden.",
+      );
     } finally {
       setIsExporting(false);
     }
@@ -283,11 +326,19 @@ export function HomeScreen({
     day: "numeric",
     month: "long",
   }).format(today);
-  const progressLabel = currentQuestionNumber === null ? "Fragen abgeschlossen" : `Frage ${currentQuestionNumber} von ${QUESTION_COUNT}`;
+  const progressLabel =
+    currentQuestionNumber === null
+      ? "Fragen abgeschlossen"
+      : `Frage ${currentQuestionNumber} von ${QUESTION_COUNT}`;
   const currentPrompt =
-    currentQuestionNumber === null ? "Alle sechs Fragen wurden bereits eingereicht." : QUESTIONS[currentQuestionNumber - 1];
+    currentQuestionNumber === null
+      ? "Alle sechs Fragen wurden bereits eingereicht."
+      : QUESTIONS[currentQuestionNumber - 1];
   const isCompletedSnapshot = activeCheckin?.status === "completed";
-  const currentBreathingCue = breathingCue(secondsRemaining, breathingDurationSeconds);
+  const currentBreathingCue = breathingCue(
+    secondsRemaining,
+    breathingDurationSeconds,
+  );
 
   return (
     <main>
@@ -295,12 +346,12 @@ export function HomeScreen({
         <header className="hero">
           <p className="date-label">{formattedDate}</p>
           <h1 className="title">
-            {greetingFor(today)}.
-            <span>Nimm dir fuenf Minuten.</span>
+            {greetingFor(today)}.<span>Nimm dir fuenf Minuten.</span>
           </h1>
           <p className="lead">
-            Erst 30 Sekunden atmen, dann sechs ruhige Fragen. Am Ende steht dein Daily Snapshot mit
-            Stimmung, Fokus und einer optionalen Coach Summary.
+            Erst 30 Sekunden atmen, dann sechs ruhige Fragen. Am Ende steht dein
+            Daily Snapshot mit Stimmung, Fokus und einer optionalen Coach
+            Summary.
           </p>
         </header>
 
@@ -313,8 +364,15 @@ export function HomeScreen({
 
             {viewState === "start" ? (
               <>
-                <button className="primary-action" type="button" onClick={() => void startMorningCheckin()} disabled={isStarting}>
-                  {isStarting ? "Morning Check-in startet..." : "Morning Check-in starten"}
+                <button
+                  className="primary-action"
+                  type="button"
+                  onClick={() => void startMorningCheckin()}
+                  disabled={isStarting}
+                >
+                  {isStarting
+                    ? "Morning Check-in startet..."
+                    : "Morning Check-in starten"}
                   <span aria-hidden="true">→</span>
                 </button>
                 <div className="routine-facts" aria-label="Ablauf der Routine">
@@ -326,135 +384,182 @@ export function HomeScreen({
             ) : null}
 
             {viewState === "breathing" ? (
-            <div className="breathing-card" aria-live="polite">
-              <h3>Atemuebung</h3>
-              <div className={`breath-orb ${currentBreathingCue.label === "Einatmen" ? "inhale" : "exhale"}`} aria-hidden="true" />
-              <p className="breathing-cue">{currentBreathingCue.label}</p>
-              <p className="breathing-detail">{currentBreathingCue.detail}</p>
-              <p className="breathing-countdown">{secondsRemaining} Sekunden verbleibend</p>
-              <progress
-                aria-label="Fortschritt der Atemuebung"
-                value={breathingDurationSeconds - secondsRemaining}
-                max={breathingDurationSeconds}
-              />
-              <button type="button" onClick={skipBreathingExercise}>
-                Atemuebung ueberspringen
-              </button>
-            </div>
-          ) : null}
+              <div className="breathing-card" aria-live="polite">
+                <h3>Atemuebung</h3>
+                <div
+                  className={`breath-orb ${currentBreathingCue.label === "Einatmen" ? "inhale" : "exhale"}`}
+                  aria-hidden="true"
+                />
+                <p className="breathing-cue">{currentBreathingCue.label}</p>
+                <p className="breathing-detail">{currentBreathingCue.detail}</p>
+                <p className="breathing-countdown">
+                  {secondsRemaining} Sekunden verbleibend
+                </p>
+                <progress
+                  aria-label="Fortschritt der Atemuebung"
+                  value={breathingDurationSeconds - secondsRemaining}
+                  max={breathingDurationSeconds}
+                />
+                <button type="button" onClick={skipBreathingExercise}>
+                  Atemuebung ueberspringen
+                </button>
+              </div>
+            ) : null}
 
-          {viewState === "questionnaire" ? (
-            <div className="question-card">
-              <h3>{progressLabel}</h3>
-              {isCompletedSnapshot ? (
-                <p>Dein Daily Snapshot ist abgeschlossen und bleibt unveraenderlich.</p>
-              ) : (
+            {viewState === "questionnaire" ? (
+              <div className="question-card">
+                <h3>{progressLabel}</h3>
+                {isCompletedSnapshot ? (
+                  <p>
+                    Dein Daily Snapshot ist abgeschlossen und bleibt
+                    unveraenderlich.
+                  </p>
+                ) : (
                   <p className="question-prompt">{currentPrompt}</p>
-              )}
+                )}
 
-              {isCompletedSnapshot ? (
-                <div>
-                  <p>Tagesdatum: {activeCheckin.browser_date}</p>
-                  <p>Stimmung: {activeCheckin.answers[0] ?? "Nicht angegeben"}</p>
-                  {activeCheckin.coach_summary ? <p>{activeCheckin.coach_summary}</p> : null}
-                  <p>Antworten:</p>
-                  <ol>
-                    {activeCheckin.answers.map((answer, index) => (
-                      <li key={index + 1}>{answer ?? "(leer)"}</li>
-                    ))}
-                  </ol>
-                </div>
-              ) : null}
+                {isCompletedSnapshot ? (
+                  <DailySnapshot snapshot={activeCheckin} />
+                ) : null}
 
-              {currentQuestionNumber !== null && !isCompletedSnapshot ? (
-                <>
-                  {currentQuestionNumber === 1 ? (
-                    <fieldset className="mood-picker" disabled={isSaving}>
-                      <legend>Optionale Stimmung</legend>
-                      <div className="mood-options">
-                        {[1, 2, 3, 4, 5].map((rating) => (
-                          <label className="mood-option" key={rating}>
-                            <input
-                              checked={questionInput === String(rating)}
-                              name="mood-rating"
-                              onChange={() => setQuestionInput(String(rating))}
-                              type="radio"
-                              value={rating}
-                            />
-                            <span>{rating}</span>
-                            <small>{["Sehr schwer", "Schwer", "Ausgeglichen", "Gut", "Sehr gut"][rating - 1]}</small>
-                          </label>
-                        ))}
-                      </div>
-                    </fieldset>
-                  ) : (
-                    <>
-                      <label htmlFor="question-input">Optionale Freitext-Antwort</label>
-                      <textarea
-                        id="question-input"
-                        name="question-input"
-                        onChange={(event) => setQuestionInput(event.target.value)}
-                        placeholder="Schreib auf, was gerade da ist."
-                        rows={5}
-                        value={questionInput}
-                      />
-                    </>
-                  )}
-                  <button type="button" onClick={() => void submitCurrentAnswer()} disabled={isSaving}>
-                    {isSaving ? "Antwort wird gespeichert..." : "Antwort speichern und weiter"}
+                {currentQuestionNumber !== null && !isCompletedSnapshot ? (
+                  <>
+                    {currentQuestionNumber === 1 ? (
+                      <fieldset className="mood-picker" disabled={isSaving}>
+                        <legend>Optionale Stimmung</legend>
+                        <div className="mood-options">
+                          {[1, 2, 3, 4, 5].map((rating) => (
+                            <label className="mood-option" key={rating}>
+                              <input
+                                checked={questionInput === String(rating)}
+                                name="mood-rating"
+                                onChange={() =>
+                                  setQuestionInput(String(rating))
+                                }
+                                type="radio"
+                                value={rating}
+                              />
+                              <span>{rating}</span>
+                              <small>
+                                {
+                                  [
+                                    "Sehr schwer",
+                                    "Schwer",
+                                    "Ausgeglichen",
+                                    "Gut",
+                                    "Sehr gut",
+                                  ][rating - 1]
+                                }
+                              </small>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                    ) : (
+                      <>
+                        <label htmlFor="question-input">
+                          Optionale Freitext-Antwort
+                        </label>
+                        <textarea
+                          id="question-input"
+                          name="question-input"
+                          onChange={(event) =>
+                            setQuestionInput(event.target.value)
+                          }
+                          placeholder="Schreib auf, was gerade da ist."
+                          rows={5}
+                          value={questionInput}
+                        />
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void submitCurrentAnswer()}
+                      disabled={isSaving}
+                    >
+                      {isSaving
+                        ? "Antwort wird gespeichert..."
+                        : "Antwort speichern und weiter"}
+                    </button>
+                  </>
+                ) : null}
+
+                {currentQuestionNumber === null &&
+                !isCompletedSnapshot &&
+                activeCheckin ? (
+                  <>
+                    {isCompleting ? (
+                      <p className="completion-status" role="status">
+                        Dein Daily Snapshot wird verarbeitet. Einen Moment noch.
+                      </p>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => void completeCheckin(activeCheckin.id)}
+                      disabled={isCompleting}
+                    >
+                      {isCompleting
+                        ? "Daily Snapshot wird abgeschlossen..."
+                        : "Abschluss erneut versuchen"}
+                    </button>
+                  </>
+                ) : null}
+
+                {!isCompletedSnapshot ? (
+                  <button
+                    className="secondary-action"
+                    type="button"
+                    onClick={() => void restartCheckin()}
+                    disabled={isSaving || isRestarting || isCompleting}
+                  >
+                    {isRestarting
+                      ? "Starte neu..."
+                      : "Morning Check-in neu starten"}
                   </button>
-                </>
-              ) : null}
-
-              {currentQuestionNumber === null && !isCompletedSnapshot && activeCheckin ? (
-                <button type="button" onClick={() => void completeCheckin(activeCheckin.id)} disabled={isCompleting}>
-                  {isCompleting ? "Daily Snapshot wird abgeschlossen..." : "Abschluss erneut versuchen"}
-                </button>
-              ) : null}
-
-              {!isCompletedSnapshot ? (
-                <button
-                  className="secondary-action"
-                  type="button"
-                  onClick={() => void restartCheckin()}
-                  disabled={isSaving || isRestarting || isCompleting}
-                >
-                  {isRestarting ? "Starte neu..." : "Morning Check-in neu starten"}
-                </button>
-              ) : null}
-              {questionError ? <p className="status" role="alert">{questionError}</p> : null}
-            </div>
-          ) : null}
+                ) : null}
+                {questionError ? (
+                  <p className="status" role="alert">
+                    {questionError}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             {activeCheckinDate && activeCheckinId ? (
-              <p className="status">Aktiver Morning Check-in: {activeCheckinDate}</p>
+              <p className="status">
+                Aktiver Morning Check-in: {activeCheckinDate}
+              </p>
             ) : null}
-            {startError ? <p className="status" role="alert">{startError}</p> : null}
+            {startError ? (
+              <p className="status" role="alert">
+                {startError}
+              </p>
+            ) : null}
           </div>
         </section>
 
         <section className="section" aria-label="Personal Journal">
           <h2>Personal Journal</h2>
-          <button type="button" onClick={() => void downloadJournalExport()} disabled={isExporting}>
-            {isExporting ? "Journal Export wird vorbereitet..." : "Journal Export herunterladen"}
+          <button
+            type="button"
+            onClick={() => void downloadJournalExport()}
+            disabled={isExporting}
+          >
+            {isExporting
+              ? "Journal Export wird vorbereitet..."
+              : "Journal Export herunterladen"}
           </button>
-          {journalSnapshots.length === 0 && !journalLoadError ? <p>Noch keine Daily Snapshots vorhanden.</p> : null}
-          {journalLoadError ? <p className="status">{journalLoadError}</p> : null}
-          {journalExportError ? <p className="status">{journalExportError}</p> : null}
+          {journalSnapshots.length === 0 && !journalLoadError ? (
+            <p>Noch keine Daily Snapshots vorhanden.</p>
+          ) : null}
+          {journalLoadError ? (
+            <p className="status">{journalLoadError}</p>
+          ) : null}
+          {journalExportError ? (
+            <p className="status">{journalExportError}</p>
+          ) : null}
           {journalSnapshots.map((snapshot) => (
-            <article key={snapshot.id} className="question-card">
-              <h3>Daily Snapshot vom {snapshot.browser_date}</h3>
-              <p>
-                Stimmung: {snapshot.answers[0] === null || snapshot.answers[0] === undefined ? "Nicht angegeben" : snapshot.answers[0]}
-              </p>
-              <p>{snapshot.coach_summary ?? "Keine Coach Summary vorhanden."}</p>
-              <p>Antworten:</p>
-              <ol>
-                {snapshot.answers.map((answer, index) => (
-                  <li key={`${snapshot.id}-${index + 1}`}>{answer ?? "(leer)"}</li>
-                ))}
-              </ol>
-            </article>
+            <DailySnapshot key={snapshot.id} snapshot={snapshot} />
           ))}
         </section>
 
@@ -462,8 +567,9 @@ export function HomeScreen({
           {serviceStatus}
         </p>
         <p className="privacy-note">
-          Fuer die optionale Coach Summary werden nur Antworten aus dem aktuellen Morning Check-in an
-          OpenAI gesendet. Dein API-Key bleibt ausschliesslich im Backend.
+          Fuer die optionale Coach Summary werden nur Antworten aus dem
+          aktuellen Morning Check-in an OpenAI gesendet. Dein API-Key bleibt
+          ausschliesslich im Backend.
         </p>
       </div>
     </main>
