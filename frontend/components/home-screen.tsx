@@ -11,7 +11,7 @@ import type {
   MorningCheckinAnswer,
   MorningCheckinResponse,
 } from "@/lib/api/types";
-import { DailySnapshot } from "@/components/daily-snapshot";
+import { DailySnapshot, MOOD_LABELS } from "@/components/daily-snapshot";
 
 type HomeScreenProps = {
   apiClient?: PersonalJournalApiClient;
@@ -428,31 +428,21 @@ export function HomeScreen({
                       <fieldset className="mood-picker" disabled={isSaving}>
                         <legend>Optionale Stimmung</legend>
                         <div className="mood-options">
-                          {[1, 2, 3, 4, 5].map((rating) => (
-                            <label className="mood-option" key={rating}>
-                              <input
-                                checked={questionInput === String(rating)}
-                                name="mood-rating"
-                                onChange={() =>
-                                  setQuestionInput(String(rating))
-                                }
-                                type="radio"
-                                value={rating}
-                              />
-                              <span>{rating}</span>
-                              <small>
-                                {
-                                  [
-                                    "Sehr schwer",
-                                    "Schwer",
-                                    "Ausgeglichen",
-                                    "Gut",
-                                    "Sehr gut",
-                                  ][rating - 1]
-                                }
-                              </small>
-                            </label>
-                          ))}
+                          {Object.entries(MOOD_LABELS).map(
+                            ([rating, label]) => (
+                              <label className="mood-option" key={rating}>
+                                <input
+                                  checked={questionInput === rating}
+                                  name="mood-rating"
+                                  onChange={() => setQuestionInput(rating)}
+                                  type="radio"
+                                  value={rating}
+                                />
+                                <span>{rating}</span>
+                                <small>{label}</small>
+                              </label>
+                            ),
+                          )}
                         </div>
                       </fieldset>
                     ) : (

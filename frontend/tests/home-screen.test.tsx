@@ -854,6 +854,85 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
     ),
   ).toBeInTheDocument();
   expect(screen.getByText("Stimmung: Nicht angegeben")).toBeInTheDocument();
+  expect(
+    screen.getByText(
+      "Für heute gibt es keine Coach Summary. Dein Daily Snapshot bleibt vollständig.",
+    ),
+  ).toBeInTheDocument();
+  expect(screen.getAllByText("Keine Antwort")).toHaveLength(6);
+});
+
+test("shows an understandable processing state while completing a snapshot", async () => {
+  let resolveCompletion:
+    | ((
+        response: Awaited<
+          ReturnType<PersonalJournalApiClient["completeMorningCheckin"]>
+        >,
+      ) => void)
+    | undefined;
+
+  render(
+    <HomeScreen
+      apiClient={makeMockClient({
+        getOrCreateMorningCheckin: async () => ({
+          id: "checkin-1",
+          browser_date: "2026-08-04",
+          status: "unfinished",
+          answers: [null, null, null, null, null, null],
+          next_question_number: 6,
+          coach_summary: null,
+        }),
+        saveMorningCheckinAnswer: async () => ({
+          id: "checkin-1",
+          browser_date: "2026-08-04",
+          status: "unfinished",
+          answers: [null, null, null, null, null, null],
+          next_question_number: null,
+          coach_summary: null,
+        }),
+        completeMorningCheckin: () =>
+          new Promise((resolve) => {
+            resolveCompletion = resolve;
+          }),
+      })}
+    />,
+  );
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "Morning Check-in starten" }),
+  );
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", { name: "Antwort speichern und weiter" }),
+    ).toBeInTheDocument();
+  });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Antwort speichern und weiter" }),
+  );
+
+  await waitFor(() => {
+    expect(
+      screen.getByText(
+        "Dein Daily Snapshot wird verarbeitet. Einen Moment noch.",
+      ),
+    ).toHaveAttribute("role", "status");
+    expect(
+      screen.getByRole("button", {
+        name: "Daily Snapshot wird abgeschlossen...",
+      }),
+    ).toBeDisabled();
+  });
+
+  await act(async () => {
+    resolveCompletion?.({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "completed",
+      answers: [null, null, null, null, null, null],
+      next_question_number: null,
+      coach_summary: null,
+    });
+  });
 });
 
 test("renders generated coach summary after completing final answer", async () => {

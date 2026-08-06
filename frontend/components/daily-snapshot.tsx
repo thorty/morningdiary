@@ -14,7 +14,7 @@ const RESPONSE_LABELS = [
   "Deine freundliche Absicht",
 ];
 
-const MOOD_LABELS: Record<number, string> = {
+export const MOOD_LABELS: Record<number, string> = {
   1: "Sehr schwer",
   2: "Schwer",
   3: "Ausgeglichen",
