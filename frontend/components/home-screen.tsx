@@ -36,13 +36,13 @@ function toBrowserDate(value: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function breathingCue(secondsRemaining: number, totalDurationSeconds: number): string {
+function breathingCue(secondsRemaining: number, totalDurationSeconds: number): { label: string; detail: string } {
   const elapsed = totalDurationSeconds - secondsRemaining;
   const cyclePosition = elapsed % BREATHING_CYCLE_SECONDS;
   if (cyclePosition < 4) {
-    return "4 Sekunden einatmen";
+    return { label: "Einatmen", detail: "4 Sekunden einatmen" };
   }
-  return "6 Sekunden ausatmen";
+  return { label: "Ausatmen", detail: "6 Sekunden ausatmen" };
 }
 
 function greetingFor(date: Date): string {
@@ -283,6 +283,7 @@ export function HomeScreen({
   const currentPrompt =
     currentQuestionNumber === null ? "Alle sechs Fragen wurden bereits eingereicht." : QUESTIONS[currentQuestionNumber - 1];
   const isCompletedSnapshot = activeCheckin?.status === "completed";
+  const currentBreathingCue = breathingCue(secondsRemaining, breathingDurationSeconds);
 
   return (
     <main>
@@ -321,11 +322,17 @@ export function HomeScreen({
             ) : null}
 
             {viewState === "breathing" ? (
-            <div className="breathing-card">
+            <div className="breathing-card" aria-live="polite">
               <h3>Atemuebung</h3>
-              <p>{breathingCue(secondsRemaining, breathingDurationSeconds)}</p>
-              <p>{secondsRemaining} Sekunden verbleibend</p>
-              <progress value={breathingDurationSeconds - secondsRemaining} max={breathingDurationSeconds} />
+              <div className={`breath-orb ${currentBreathingCue.label === "Einatmen" ? "inhale" : "exhale"}`} aria-hidden="true" />
+              <p className="breathing-cue">{currentBreathingCue.label}</p>
+              <p className="breathing-detail">{currentBreathingCue.detail}</p>
+              <p className="breathing-countdown">{secondsRemaining} Sekunden verbleibend</p>
+              <progress
+                aria-label="Fortschritt der Atemuebung"
+                value={breathingDurationSeconds - secondsRemaining}
+                max={breathingDurationSeconds}
+              />
               <button type="button" onClick={skipBreathingExercise}>
                 Atemuebung ueberspringen
               </button>

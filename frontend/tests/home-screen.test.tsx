@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 
 import { HomeScreen } from "@/components/home-screen";
@@ -150,6 +150,38 @@ test("finishes breathing exercise and reaches first question", async () => {
     },
     { timeout: 2_000 },
   );
+});
+
+test("shows the breathing rhythm, countdown, and progress before automatically opening question one", async () => {
+  vi.useFakeTimers();
+
+  try {
+    render(<HomeScreen apiClient={makeMockClient()} breathingDurationSeconds={10} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Morning Check-in starten" }));
+
+    await act(async () => {});
+
+    expect(screen.getByText("Einatmen")).toBeInTheDocument();
+    expect(screen.getByText("10 Sekunden verbleibend")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar", { name: "Fortschritt der Atemuebung" })).toHaveValue(0);
+
+    act(() => {
+      vi.advanceTimersByTime(4_000);
+    });
+
+    expect(screen.getByText("Ausatmen")).toBeInTheDocument();
+    expect(screen.getByText("6 Sekunden verbleibend")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar", { name: "Fortschritt der Atemuebung" })).toHaveValue(4);
+
+    act(() => {
+      vi.advanceTimersByTime(6_000);
+    });
+
+    expect(screen.getByRole("heading", { name: "Frage 1 von 6", level: 3 })).toBeInTheDocument();
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test("shows degraded status when backend health request fails", async () => {
