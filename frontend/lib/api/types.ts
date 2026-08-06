@@ -15,6 +15,7 @@ export type MorningCheckinResponse = {
   next_question_number: number | null;
   coach_summary: string | null;
   coach_summary_status?: CoachSummaryStatus;
+  coach_summary_retry_available?: boolean;
 };
 
 export type SaveMorningCheckinAnswerRequest = {

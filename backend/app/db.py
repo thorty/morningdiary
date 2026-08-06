@@ -7,7 +7,6 @@ from uuid import uuid4
 
 from tinydb import Query, TinyDB
 
-from app.coach_summary import COACH_SUMMARY_UNAVAILABLE_NOTE
 
 
 class MorningCheckinRecord(TypedDict):
@@ -18,6 +17,7 @@ class MorningCheckinRecord(TypedDict):
     next_question_number: int | None
     coach_summary: str | None
     coach_summary_status: Literal["available", "unavailable", "not_requested"]
+    coach_summary_retry_available: bool
 
 
 class MorningCheckinNotFoundError(Exception):
@@ -81,6 +81,8 @@ class PersonalJournalStore:
             "answers": _default_answers(),
             "answered_questions": _default_answered_questions(),
             "next_question_number": 1,
+            "coach_summary_status": "not_requested",
+            "coach_summary_retry_available": False,
         }
         self._table.insert(checkin)
         return self._to_record(checkin), "created"
@@ -208,16 +210,14 @@ class PersonalJournalStore:
             "answers": answers,
             "next_question_number": next_question_number,
             "coach_summary": cast(str | None, row.get("coach_summary")),
-            "coach_summary_status": (
-                "unavailable"
-                if row.get("coach_summary") == COACH_SUMMARY_UNAVAILABLE_NOTE
-                else "available"
-                if row.get("coach_summary")
-                else "not_requested"
+            "coach_summary_status": cast(
+                Literal["available", "unavailable", "not_requested"],
+                row.get("coach_summary_status", "not_requested"),
             ),
+            "coach_summary_retry_available": cast(bool, row.get("coach_summary_retry_available", False)),
         }
 
-    def save_coach_summary(self, checkin_id: str, coach_summary: str) -> MorningCheckinRecord:
+    def save_coach_summary(self, checkin_id: str, coach_summary: str, coach_summary_status: Literal["available", "unavailable"], coach_summary_retry_available: bool) -> MorningCheckinRecord:
         existing = self._get_by_id(checkin_id)
         if existing is None:
             raise MorningCheckinNotFoundError
@@ -225,7 +225,7 @@ class PersonalJournalStore:
         if existing["status"] != "completed":
             raise InvalidMorningCheckinStateError
 
-        self._table.update({"coach_summary": coach_summary}, Query().id == checkin_id)
+        self._table.update({"coach_summary": coach_summary, "coach_summary_status": coach_summary_status, "coach_summary_retry_available": coach_summary_retry_available}, Query().id == checkin_id)
         updated = self._get_by_id(checkin_id)
         if updated is None:
             raise MorningCheckinNotFoundError

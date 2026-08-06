@@ -18,6 +18,7 @@ class MorningCheckinResponse(BaseModel):
     next_question_number: int | None
     coach_summary: str | None = None
     coach_summary_status: Literal["available", "unavailable", "not_requested"] = "not_requested"
+    coach_summary_retry_available: bool = False
 
 
 class SaveMorningCheckinAnswerRequest(BaseModel):

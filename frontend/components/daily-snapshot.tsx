@@ -117,7 +117,7 @@ export function DailySnapshot({
           {RESPONSE_LABELS.map((label, index) => (
             <li key={label}>
               <span>{label}</span>
-              <p>{responseText(snapshot.answers[index] ?? null, index)}</p>
+              <p className="snapshot-response-text">{responseText(snapshot.answers[index] ?? null, index)}</p>
             </li>
           ))}
         </ol>

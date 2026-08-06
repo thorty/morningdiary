@@ -331,7 +331,7 @@ export function MorningCheckin({
                         ? "error"
                         : "ready"
                   }
-                  onRetry={() => void completeCheckin(activeCheckin.id)}
+                  onRetry={activeCheckin.coach_summary_retry_available ? () => void completeCheckin(activeCheckin.id) : undefined}
                 />
               </>
             ) : (

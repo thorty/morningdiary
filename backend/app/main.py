@@ -204,7 +204,7 @@ def create_app(
             or checkin["coach_summary_status"] == "unavailable"
         ):
             if configured_generator is None:
-                checkin = store.save_coach_summary(checkin_id, COACH_SUMMARY_UNAVAILABLE_NOTE)
+                checkin = store.save_coach_summary(checkin_id, COACH_SUMMARY_UNAVAILABLE_NOTE, "unavailable", False)
                 _log_info(
                     logger,
                     "coach_summary_fallback_saved",
@@ -248,7 +248,7 @@ def create_app(
                 generated_summary = None
 
             if generated_summary and generated_summary.strip():
-                checkin = store.save_coach_summary(checkin_id, generated_summary.strip())
+                checkin = store.save_coach_summary(checkin_id, generated_summary.strip(), "available", False)
                 _log_info(
                     logger,
                     "coach_summary_generation_succeeded",
@@ -269,7 +269,7 @@ def create_app(
                         browser_date=checkin["browser_date"].isoformat(),
                         target_language=target_language,
                     )
-                checkin = store.save_coach_summary(checkin_id, COACH_SUMMARY_UNAVAILABLE_NOTE)
+                checkin = store.save_coach_summary(checkin_id, COACH_SUMMARY_UNAVAILABLE_NOTE, "unavailable", True)
                 _log_info(
                     logger,
                     "coach_summary_fallback_saved",

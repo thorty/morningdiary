@@ -30,6 +30,13 @@ test("shows missing answers without dropping response rows", () => {
   expect(screen.getByRole("list", { name: "Deine Antworten" }).children).toHaveLength(6);
 });
 
+test("keeps a long unbroken response inside its row", () => {
+  const longAnswer = "Donaudampfschifffahrtsgesellschaftskapitaen".repeat(12);
+  render(<DailySnapshot snapshot={{ ...snapshot, answers: [4, longAnswer, null, null, null, null] }} />);
+
+  expect(screen.getByText(longAnswer)).toHaveClass("snapshot-response-text");
+});
+
 test("shows that a blank snapshot is complete without a coach summary", () => {
   render(<DailySnapshot snapshot={{ ...snapshot, answers: [null, null, null, null, null, null], coach_summary: null }} />);
 

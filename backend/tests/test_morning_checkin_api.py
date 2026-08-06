@@ -340,6 +340,7 @@ def test_completes_checkin_and_returns_daily_snapshot(tmp_path: Path) -> None:
         "next_question_number": None,
         "coach_summary": "Deine Zusammenfassung konnte heute nicht erstellt werden.",
         "coach_summary_status": "unavailable",
+        "coach_summary_retry_available": False,
     }
 
 
