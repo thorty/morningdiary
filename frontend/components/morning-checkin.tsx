@@ -12,16 +12,24 @@ import type {
 
 const BREATHING_DURATION_SECONDS = 30;
 const BREATHING_CYCLE_SECONDS = 10;
-const QUESTION_COUNT = 6;
 
-const QUESTIONS = [
-  "Wie fuehlst du dich heute Morgen auf einer Skala von 1 bis 5?",
-  "Wofuer bist du heute dankbar?",
-  "Was moechtest du heute bewusst loslassen?",
-  "Was gibt dir heute Energie?",
-  "Welche kleine Sache macht diesen Tag gut?",
-  "Welche freundliche Absicht nimmst du in den Tag mit?",
+const QUESTION_CARDS = [
+  { kicker: "Ankommen", prompt: "Wie fuehlst du dich heute Morgen auf einer Skala von 1 bis 5?" },
+  { kicker: "Dankbarkeit", prompt: "Wofuer bist du heute dankbar?" },
+  { kicker: "Loslassen", prompt: "Was moechtest du heute bewusst loslassen?" },
+  { kicker: "Energie", prompt: "Was gibt dir heute Energie?" },
+  { kicker: "Ein guter Tag", prompt: "Welche kleine Sache macht diesen Tag gut?" },
+  { kicker: "Absicht", prompt: "Welche freundliche Absicht nimmst du in den Tag mit?" },
 ];
+const QUESTION_COUNT = QUESTION_CARDS.length;
+
+const MOOD_FACE_PATHS: Record<string, string> = {
+  1: "M8 15c1.2-1.2 2.6-1.8 4-1.8s2.8.6 4 1.8",
+  2: "M8 14.5h8",
+  3: "M8 14h8",
+  4: "M8 13.5c1.2 1.2 2.6 1.8 4 1.8s2.8-.6 4-1.8",
+  5: "M7.5 13c1.4 1.8 2.9 2.7 4.5 2.7s3.1-.9 4.5-2.7",
+};
 
 type MorningCheckinProps = {
   apiClient: PersonalJournalApiClient;
@@ -221,6 +229,11 @@ export function MorningCheckin({
     }
   }
 
+  function goToPreviousQuestion(): void {
+    if (currentQuestionNumber === null || currentQuestionNumber <= 1) return;
+    setCurrentQuestionNumber(currentQuestionNumber - 1);
+  }
+
   const isCompletedSnapshot = activeCheckin?.status === "completed";
   const progressLabel =
     currentQuestionNumber === null
@@ -229,7 +242,11 @@ export function MorningCheckin({
   const currentPrompt =
     currentQuestionNumber === null
       ? "Alle sechs Fragen wurden bereits eingereicht."
-      : QUESTIONS[currentQuestionNumber - 1];
+      : QUESTION_CARDS[currentQuestionNumber - 1].prompt;
+  const currentKicker =
+    currentQuestionNumber === null
+      ? null
+      : QUESTION_CARDS[currentQuestionNumber - 1].kicker;
   const currentBreathingCue = breathingCue(
     secondsRemaining,
     breathingDurationSeconds,
@@ -294,6 +311,7 @@ export function MorningCheckin({
         ) : null}
         {viewState === "questionnaire" ? (
           <div className="question-card">
+            {currentKicker ? <p className="question-kicker">{currentKicker}</p> : null}
             <h3>{progressLabel}</h3>
             {isCompletedSnapshot ? (
               <>
@@ -305,6 +323,22 @@ export function MorningCheckin({
               </>
             ) : (
               <>
+                <ol className="question-progress" aria-label="Fortschritt">
+                  {QUESTION_CARDS.map((question, index) => (
+                    <li
+                      className={
+                        index + 1 === currentQuestionNumber
+                          ? "current"
+                          : index + 1 < (currentQuestionNumber ?? QUESTION_COUNT + 1)
+                            ? "completed"
+                            : ""
+                      }
+                      key={question.prompt}
+                    >
+                      <span className="sr-only">Frage {index + 1}</span>
+                    </li>
+                  ))}
+                </ol>
                 <p className="question-prompt">{currentPrompt}</p>
                 {currentQuestionNumber !== null ? (
                   <>
@@ -322,7 +356,12 @@ export function MorningCheckin({
                                   type="radio"
                                   value={rating}
                                 />
-                                <span>{rating}</span>
+                                <span className="sr-only">{rating}</span>
+                                <svg aria-hidden="true" viewBox="0 0 24 24">
+                                  <circle cx="9" cy="10" fill="currentColor" r="1" />
+                                  <circle cx="15" cy="10" fill="currentColor" r="1" />
+                                  <path d={MOOD_FACE_PATHS[rating]} fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
+                                </svg>
                                 <small>{label}</small>
                               </label>
                             ),
@@ -355,6 +394,16 @@ export function MorningCheckin({
                         ? "Antwort wird gespeichert..."
                         : "Antwort speichern und weiter"}
                     </button>
+                    {currentQuestionNumber > 1 ? (
+                      <button
+                        className="secondary-action"
+                        type="button"
+                        onClick={goToPreviousQuestion}
+                        disabled={isSaving}
+                      >
+                        Zurueck
+                      </button>
+                    ) : null}
                   </>
                 ) : activeCheckin ? (
                   <>

@@ -81,6 +81,81 @@ test("direct Morning Check-in route resumes the unfinished check-in", async () =
   );
 });
 
+test("question cards show progress and preserve saved answers while navigating back", async () => {
+  const saveMorningCheckinAnswer = vi
+    .fn<PersonalJournalApiClient["saveMorningCheckinAnswer"]>()
+    .mockResolvedValue({
+      id: "checkin-1",
+      browser_date: "2026-08-04",
+      status: "unfinished",
+      answers: [3, "Schon notiert", null, null, null, null],
+      next_question_number: 3,
+      coach_summary: null,
+    });
+
+  render(
+    <MorningCheckinPage
+      apiClient={makeMockClient({
+        saveMorningCheckinAnswer,
+        getOrCreateMorningCheckin: async () => ({
+          id: "checkin-1",
+          browser_date: "2026-08-04",
+          status: "unfinished",
+          answers: [3, "Schon notiert", null, null, null, null],
+          next_question_number: 3,
+          coach_summary: null,
+        }),
+      })}
+      todayDateProvider={() => new Date("2026-08-04T12:00:00")}
+    />,
+  );
+
+  expect(await screen.findByText("Loslassen")).toBeInTheDocument();
+  const progress = screen.getByRole("list", { name: "Fortschritt" });
+  expect(progress.children).toHaveLength(6);
+  expect(progress.children[0]).toHaveClass("completed");
+  expect(progress.children[1]).toHaveClass("completed");
+  expect(progress.children[2]).toHaveClass("current");
+  fireEvent.click(screen.getByRole("button", { name: "Zurueck" }));
+
+  expect(screen.getByRole("heading", { name: "Frage 2 von 6", level: 3 })).toBeInTheDocument();
+  expect(progress.children[0]).toHaveClass("completed");
+  expect(progress.children[1]).toHaveClass("current");
+  expect(screen.getByLabelText("Optionale Freitext-Antwort")).toHaveValue("Schon notiert");
+  fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
+
+  await waitFor(() => {
+    expect(saveMorningCheckinAnswer).toHaveBeenCalledWith("checkin-1", {
+      question_number: 2,
+      answer: "Schon notiert",
+    });
+  });
+  expect(screen.getByRole("heading", { name: "Frage 3 von 6", level: 3 })).toBeInTheDocument();
+});
+
+test("mood question offers the five labelled face ratings", async () => {
+  render(
+    <MorningCheckinPage
+      apiClient={makeMockClient()}
+      todayDateProvider={() => new Date("2026-08-04T12:00:00")}
+    />,
+  );
+
+  fireEvent.click(await screen.findByRole("button", { name: "Atemuebung ueberspringen" }));
+  const ratings = await screen.findAllByRole("radio");
+
+  expect(ratings).toHaveLength(5);
+  expect(ratings.map((rating) => rating.getAttribute("value"))).toEqual([
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+  ]);
+  expect(screen.getByRole("radio", { name: "1 Sehr schwer" })).toBeInTheDocument();
+  expect(screen.getByRole("radio", { name: "5 Sehr gut" })).toBeInTheDocument();
+});
+
 test("homepage shows a resume action and newest snapshots from the API", async () => {
   render(<HomePage apiClient={makeMockClient({
     getOrCreateMorningCheckin: async () => ({ id: "today", browser_date: "2026-08-04", status: "unfinished", answers: [3, "", null, null, null, null], next_question_number: 2, coach_summary: null }),

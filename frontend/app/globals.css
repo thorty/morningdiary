@@ -320,6 +320,35 @@ h3 {
   line-height: 1.25;
 }
 
+.question-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.question-progress {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.45rem;
+  margin: 0.9rem 0 1.35rem;
+  padding: 0;
+  list-style: none;
+}
+
+.question-progress li {
+  height: 0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--line);
+}
+
+.question-progress li.completed,
+.question-progress li.current {
+  background: var(--primary);
+}
+
 .question-card label,
 .mood-picker legend {
   display: block;
@@ -404,14 +433,27 @@ h3 {
   display: block;
 }
 
-.mood-option span {
-  font-family: var(--font-display);
-  font-size: 1.35rem;
+.mood-option svg {
+  display: block;
+  width: 1.6rem;
+  height: 1.6rem;
+  margin: 0 auto;
 }
 
 .mood-option small {
   margin-top: 0.2rem;
   font-size: 0.62rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .routine-card {
