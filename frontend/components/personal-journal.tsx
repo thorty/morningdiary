@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { MOOD_LABELS } from "@/components/daily-snapshot";
 import type { MorningCheckinResponse } from "@/lib/api/types";
+import { moodFor } from "@/lib/mood";
 
 function formatDate(browserDate: string): string {
   return new Intl.DateTimeFormat("de-DE", {
@@ -11,11 +12,6 @@ function formatDate(browserDate: string): string {
     month: "short",
     year: "numeric",
   }).format(new Date(`${browserDate}T12:00:00`));
-}
-
-function moodFor(snapshot: MorningCheckinResponse): number | null {
-  const mood = snapshot.answers[0];
-  return typeof mood === "number" && mood >= 1 && mood <= 5 ? mood : null;
 }
 
 function previewFor(snapshot: MorningCheckinResponse): string {
@@ -45,9 +41,6 @@ export function PersonalJournal({
   const sortedSnapshots = [...snapshots].sort((first, second) =>
     second.browser_date.localeCompare(first.browser_date),
   );
-  const moodSnapshots = sortedSnapshots
-    .filter((snapshot) => moodFor(snapshot) !== null)
-    .slice(0, 10);
 
   return (
     <>
@@ -64,26 +57,6 @@ export function PersonalJournal({
             </button>
           ) : null}
         </div>
-      ) : null}
-      {moodSnapshots.length >= 2 ? (
-        <section className="mood-history" aria-labelledby="mood-history-title">
-          <div>
-            <p className="snapshot-kicker">Die letzten Eintraege</p>
-            <h3 id="mood-history-title">Dein Stimmungsverlauf</h3>
-          </div>
-          <ol aria-label="Stimmungswerte der letzten Tage">
-            {moodSnapshots.map((snapshot) => {
-              const mood = moodFor(snapshot);
-              return (
-                <li key={snapshot.id}>
-                  <span>{formatDate(snapshot.browser_date)}</span>
-                  <strong>{mood} / 5</strong>
-                  <i style={{ height: `${(mood ?? 0) * 20}%` }} aria-hidden="true" />
-                </li>
-              );
-            })}
-          </ol>
-        </section>
       ) : null}
       {snapshots.length > 0 ? (
         <ol className="journal-entry-list" aria-label="Daily Snapshots">

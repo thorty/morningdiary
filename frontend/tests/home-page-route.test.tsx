@@ -109,6 +109,7 @@ test("the home route resumes an unfinished Morning Check-in and limits the previ
     await screen.findByRole("link", { name: "Morning Check-in fortsetzen" }),
   ).toHaveAttribute("href", "/check-in");
   expect(screen.getAllByRole("article")).toHaveLength(3);
+  expect(screen.getByRole("img", { name: /Stimmungsverlauf/ })).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Alle ansehen" })).toHaveAttribute(
     "href",
     "/journal",

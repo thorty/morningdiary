@@ -1186,7 +1186,7 @@ test("renders personal journal entries newest first with mood and previews", asy
   ).toEqual(["Daily Snapshot vom 2026-08-05", "Daily Snapshot vom 2026-08-04"]);
 });
 
-test("shows a compact mood history for at most the ten most recent valid moods", async () => {
+test("shows a mood trend for at most the ten most recent valid moods", async () => {
   render(
     <HomeScreen
       apiClient={makeMockClient({
@@ -1225,12 +1225,9 @@ test("shows a compact mood history for at most the ten most recent valid moods",
       screen.getByRole("heading", { name: "Dein Stimmungsverlauf", level: 3 }),
     ).toBeInTheDocument();
   });
-  expect(
-    screen.getByRole("list", { name: "Stimmungswerte der letzten Tage" }),
-  ).toHaveTextContent("5 / 5");
-  expect(
-    screen.getByRole("list", { name: "Stimmungswerte der letzten Tage" }).children,
-  ).toHaveLength(10);
+  expect(screen.getByRole("img", { name: /Stimmungsverlauf/ })).toHaveAccessibleName(
+    "Stimmungsverlauf: 3 von 5 am 23. Juli 2026; 3 von 5 am 24. Juli 2026; 3 von 5 am 25. Juli 2026; 3 von 5 am 26. Juli 2026; 3 von 5 am 27. Juli 2026; 3 von 5 am 28. Juli 2026; 3 von 5 am 29. Juli 2026; 3 von 5 am 30. Juli 2026; 2 von 5 am 5. August 2026; 5 von 5 am 6. August 2026",
+  );
 });
 
 test("distinguishes an empty journal from a journal loading error", async () => {

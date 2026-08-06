@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 import { PersonalJournal } from "@/components/personal-journal";
+import { MoodTrend } from "@/components/mood-trend";
 import { ThemePicker } from "@/components/theme-picker";
 import type { PersonalJournalApiClient } from "@/lib/api/client";
 import { defaultPersonalJournalApiClient } from "@/lib/api/default-client";
@@ -48,6 +49,7 @@ export function PersonalJournalPage({ apiClient = defaultPersonalJournalApiClien
       <header className="hero"><p className="date-label">Dein Archiv</p><h1 className="title">Personal Journal</h1></header>
       <section className="section" aria-label="Personal Journal">
         <div className="journal-heading"><h2>Daily Snapshots</h2><button className="journal-export" type="button" onClick={() => void downloadExport()} disabled={isExporting}>{isExporting ? "Journal Export wird vorbereitet..." : "Journal Export herunterladen"}</button></div>
+        <MoodTrend snapshots={snapshots} />
         <PersonalJournal snapshots={snapshots} isLoading={isLoading} error={error} startCheckinHref="/check-in" />
         {exportError ? <p className="status" role="alert">{exportError}</p> : null}
       </section>

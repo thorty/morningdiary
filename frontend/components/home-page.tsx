@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 
 import { DailySnapshot } from "@/components/daily-snapshot";
 import { PersonalJournal } from "@/components/personal-journal";
+import { MoodTrend } from "@/components/mood-trend";
 import { ThemePicker } from "@/components/theme-picker";
 import type { PersonalJournalApiClient } from "@/lib/api/client";
 import { defaultPersonalJournalApiClient } from "@/lib/api/default-client";
@@ -55,6 +56,6 @@ export function HomePage({ apiClient = defaultPersonalJournalApiClient, todayDat
     <nav className="page-nav" aria-label="Seitennavigation"><div className="page-nav-links"><Link href="/check-in">Morning Check-in</Link><Link href="/journal">Personal Journal</Link></div><ThemePicker automaticTheme={resolveAutomaticTheme(snapshots)} /></nav>
     <header className="hero"><p className="date-label">{dateLabel}</p><h1 className="title">{greetingFor(today)}.<span>Nimm dir fuenf Minuten.</span></h1><p className="lead">Erst 30 Sekunden atmen, dann sechs ruhige Fragen. Am Ende steht dein Daily Snapshot mit Stimmung, Fokus und einer optionalen Coach Summary.</p></header>
     {checkinError ? <p className="status" role="alert">{checkinError}</p> : checkin?.status === "completed" ? <section className="section"><p className="completion-status" role="status">Dein Morning Check-in fuer heute ist abgeschlossen.</p><DailySnapshot snapshot={checkin} summaryState={checkin.coach_summary_status === "unavailable" ? "error" : "ready"} onRetry={checkin.coach_summary_retry_available ? () => void retryCoachSummary(checkin) : undefined} /></section> : <section className="section routine-card"><div className="routine-card-heading"><h2>Deine Routine fuer heute</h2><p>{checkin ? "Dein heutiger Morning Check-in ist bereit." : "Heutiger Status wird geladen..."}</p></div><Link className="primary-action" href="/check-in">{action}<span aria-hidden="true">→</span></Link><div className="routine-facts"><span>30 Sekunden atmen</span><span>6 Fragen</span><span>Daily Snapshot</span></div></section>}
-    <section className="section" aria-label="Letzte Daily Snapshots"><div className="journal-heading"><h2>Letzte Daily Snapshots</h2><Link href="/journal">Alle ansehen</Link></div><PersonalJournal snapshots={snapshots.slice(0, 3)} isLoading={isJournalLoading} error={journalError} onStartCheckin={() => { window.location.href = "/check-in"; }} /></section>
+    <section className="section" aria-label="Letzte Daily Snapshots"><MoodTrend snapshots={snapshots} /><div className="journal-heading"><h2>Letzte Daily Snapshots</h2><Link href="/journal">Alle ansehen</Link></div><PersonalJournal snapshots={snapshots.slice(0, 3)} isLoading={isJournalLoading} error={journalError} onStartCheckin={() => { window.location.href = "/check-in"; }} /></section>
   </div></main>;
 }

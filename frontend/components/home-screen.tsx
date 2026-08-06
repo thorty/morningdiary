@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import React from "react";
 
 import { MorningCheckin } from "@/components/morning-checkin";
+import { MoodTrend } from "@/components/mood-trend";
 import { PersonalJournal } from "@/components/personal-journal";
 import {
   createHttpPersonalJournalApiClient,
@@ -166,6 +167,7 @@ export function HomeScreen({
                 : "Journal Export herunterladen"}
             </button>
           </div>
+          <MoodTrend snapshots={journalSnapshots} />
           <PersonalJournal
             snapshots={journalSnapshots}
             isLoading={isJournalLoading}
