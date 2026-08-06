@@ -80,6 +80,7 @@ test("the home route presents the daytime greeting, introduction, and routine", 
   expect(
     screen.getByRole("link", { name: "Morning Check-in starten" }),
   ).toHaveAttribute("href", "/check-in");
+  expect(await screen.findByText("Noch keine Daily Snapshots vorhanden.")).toBeInTheDocument();
 });
 
 test("the home route resumes an unfinished Morning Check-in and limits the preview to three snapshots", async () => {
@@ -161,4 +162,20 @@ test("the home route keeps the journal preview available when today's status can
   expect(
     screen.getByRole("article", { name: "Daily Snapshot vom 2026-08-03" }),
   ).toBeInTheDocument();
+});
+
+test("the home route distinguishes a loading journal preview from an empty one", async () => {
+  let resolveSnapshots: (snapshots: MorningCheckinResponse[]) => void;
+  client.listPersonalJournalSnapshots.mockImplementation(
+    () => new Promise((resolve) => { resolveSnapshots = resolve; }),
+  );
+
+  render(<Page />);
+
+  expect(screen.getByText("Journal wird geladen...")).toBeInTheDocument();
+  expect(screen.queryByText("Noch keine Daily Snapshots vorhanden.")).not.toBeInTheDocument();
+
+  resolveSnapshots!([]);
+
+  expect(await screen.findByText("Noch keine Daily Snapshots vorhanden.")).toBeInTheDocument();
 });
