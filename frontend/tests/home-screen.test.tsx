@@ -856,7 +856,7 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
   expect(screen.getByText("Stimmung: Nicht angegeben")).toBeInTheDocument();
   expect(
     screen.getByText(
-      "Für heute gibt es keine Coach Summary. Dein Daily Snapshot bleibt vollständig.",
+      "Für heute gibt es keine Zusammenfassung. Dein Daily Snapshot bleibt vollständig.",
     ),
   ).toBeInTheDocument();
   expect(screen.getAllByText("Keine Antwort")).toHaveLength(6);
@@ -1108,7 +1108,7 @@ test("renders personal journal snapshots newest first with and without summary",
   ).toBeInTheDocument();
   expect(
     screen.getByText(
-      "Für heute gibt es keine Coach Summary. Dein Daily Snapshot bleibt vollständig.",
+      "Für heute gibt es keine Zusammenfassung. Dein Daily Snapshot bleibt vollständig.",
     ),
   ).toBeInTheDocument();
 
@@ -1148,7 +1148,7 @@ test("shows all six responses without inventing mood or coach summary for a blan
   expect(screen.getByText("Stimmung: Nicht angegeben")).toBeInTheDocument();
   expect(
     screen.getByText(
-      "Für heute gibt es keine Coach Summary. Dein Daily Snapshot bleibt vollständig.",
+      "Für heute gibt es keine Zusammenfassung. Dein Daily Snapshot bleibt vollständig.",
     ),
   ).toBeInTheDocument();
   expect(screen.getAllByText("Keine Antwort")).toHaveLength(6);

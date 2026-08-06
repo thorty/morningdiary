@@ -74,7 +74,7 @@ export function DailySnapshot({
           <p>{snapshot.coach_summary}</p>
         ) : (
           <p>
-            Für heute gibt es keine Coach Summary. Dein Daily Snapshot bleibt
+            Für heute gibt es keine Zusammenfassung. Dein Daily Snapshot bleibt
             vollständig.
           </p>
         )}
