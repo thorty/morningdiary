@@ -419,6 +419,15 @@ h3 {
   animation: bloom var(--motion-enter) both;
 }
 
+.routine-card-breathing {
+  min-height: min(42rem, calc(100vh - 7rem));
+}
+
+.routine-card-breathing .routine-card-heading {
+  padding-bottom: 1.25rem;
+  text-align: center;
+}
+
 .routine-card-heading {
   padding: 2rem;
   background: linear-gradient(145deg, var(--color-wash-start), var(--color-wash-middle) 54%, var(--color-wash-end));
@@ -476,6 +485,13 @@ h3 {
   margin: 1.5rem 2rem;
 }
 
+.routine-card-breathing > .breathing-card {
+  display: grid;
+  min-height: 27rem;
+  place-items: center;
+  align-content: center;
+}
+
 .routine-card > .status {
   margin: 1rem 2rem;
 }
@@ -498,21 +514,32 @@ h3 {
 }
 
 .breath-orb {
-  width: 7rem;
+  position: relative;
+  display: grid;
+  width: min(15rem, 55vw);
+  place-items: center;
   aspect-ratio: 1;
-  margin: 1.25rem auto;
   border-radius: 50%;
+  background: conic-gradient(var(--primary) var(--breathing-progress), var(--color-line) 0);
+  transition: background 250ms linear;
+}
+
+.breath-orb::before {
+  width: 80%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  content: "";
   background: radial-gradient(circle at 35% 30%, var(--color-orb-start), var(--color-orb-middle) 55%, var(--color-orb-end));
   box-shadow:
     0 0 0 1rem color-mix(in srgb, var(--accent) 32%, transparent),
     0 0 0 2rem color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
-.breath-orb.inhale {
+.breath-orb.inhale::before {
   animation: inhale 4s ease-in-out both;
 }
 
-.breath-orb.exhale {
+.breath-orb.exhale::before {
   animation: exhale 6s ease-in-out both;
 }
 
@@ -526,6 +553,16 @@ h3 {
 .breathing-countdown {
   margin: 0.35rem 0;
   color: var(--muted);
+}
+
+.breathing-card button {
+  margin-top: 1.25rem;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 .privacy-note,

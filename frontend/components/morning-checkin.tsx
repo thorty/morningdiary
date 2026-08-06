@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import React from "react";
 
 import { DailySnapshot, MOOD_LABELS } from "@/components/daily-snapshot";
@@ -73,6 +73,8 @@ export function MorningCheckin({
   const [isCompleting, setIsCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shouldResume, setShouldResume] = useState(false);
+  const breathingEndsAt = useRef<number | null>(null);
+  const hasFinishedBreathing = useRef(false);
 
   const browserDate = toBrowserDate(todayDateProvider());
 
@@ -80,12 +82,21 @@ export function MorningCheckin({
     setActiveCheckin(checkin);
     setCurrentQuestionNumber(checkin.next_question_number);
     setSecondsRemaining(breathingDurationSeconds);
+    breathingEndsAt.current = Date.now() + breathingDurationSeconds * 1000;
+    hasFinishedBreathing.current = false;
     setViewState(
       checkin.status === "unfinished" && checkin.next_question_number === 1
         ? "breathing"
         : "questionnaire",
     );
 
+  }
+
+  function finishBreathing(): void {
+    if (hasFinishedBreathing.current) return;
+    hasFinishedBreathing.current = true;
+    setSecondsRemaining(0);
+    setViewState("questionnaire");
   }
 
   async function startMorningCheckin(isResuming = false): Promise<void> {
@@ -120,16 +131,15 @@ export function MorningCheckin({
 
   useEffect(() => {
     if (viewState !== "breathing") return;
-    const intervalId = window.setInterval(() => {
-      setSecondsRemaining((previous) => {
-        if (previous <= 1) {
-          window.clearInterval(intervalId);
-          setViewState("questionnaire");
-          return 0;
-        }
-        return previous - 1;
-      });
-    }, 1000);
+    function updateBreathingProgress(): void {
+      const endsAt = breathingEndsAt.current;
+      if (endsAt === null) return;
+      const remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+      setSecondsRemaining(remaining);
+      if (remaining === 0) finishBreathing();
+    }
+    updateBreathingProgress();
+    const intervalId = window.setInterval(updateBreathingProgress, 250);
     return () => window.clearInterval(intervalId);
   }, [viewState]);
 
@@ -227,7 +237,7 @@ export function MorningCheckin({
 
   return (
     <section className="section" aria-label="Morning Check-in">
-      <div className="routine-card">
+      <div className={`routine-card ${viewState === "breathing" ? "routine-card-breathing" : ""}`}>
         <div className="routine-card-heading">
           <h2>Deine Routine fuer heute</h2>
           <p>Ein kurzer Moment fuer Dankbarkeit und Klarheit.</p>
@@ -260,6 +270,9 @@ export function MorningCheckin({
             <div
               className={`breath-orb ${currentBreathingCue.label === "Einatmen" ? "inhale" : "exhale"}`}
               aria-hidden="true"
+              style={{
+                "--breathing-progress": `${((breathingDurationSeconds - secondsRemaining) / breathingDurationSeconds) * 100}%`,
+              } as React.CSSProperties}
             />
             <p className="breathing-cue">{currentBreathingCue.label}</p>
             <p className="breathing-detail">{currentBreathingCue.detail}</p>
@@ -273,10 +286,7 @@ export function MorningCheckin({
             />
             <button
               type="button"
-              onClick={() => {
-                setViewState("questionnaire");
-                setSecondsRemaining(0);
-              }}
+              onClick={finishBreathing}
             >
               Atemuebung ueberspringen
             </button>

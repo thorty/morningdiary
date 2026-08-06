@@ -5,6 +5,8 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import React from "react";
 
 import { HomeScreen } from "@/components/home-screen";
@@ -234,6 +236,73 @@ test("shows the breathing rhythm, countdown, and progress before automatically o
   } finally {
     vi.useRealTimers();
   }
+});
+
+test("uses real elapsed time when a delayed browser timer catches up", async () => {
+  vi.useFakeTimers();
+
+  try {
+    render(<HomeScreen apiClient={makeMockClient()} breathingDurationSeconds={30} />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Morning Check-in starten" }),
+    );
+    await act(async () => {});
+
+    vi.setSystemTime(Date.now() + 30_000);
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+
+    expect(
+      screen.getByRole("heading", { name: "Frage 1 von 6", level: 3 }),
+    ).toBeInTheDocument();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("keeps question one visible when the breathing timer fires after skipping", async () => {
+  vi.useFakeTimers();
+
+  try {
+    render(<HomeScreen apiClient={makeMockClient()} breathingDurationSeconds={30} />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Morning Check-in starten" }),
+    );
+    await act(async () => {});
+    fireEvent.click(
+      screen.getByRole("button", { name: "Atemuebung ueberspringen" }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(30_000);
+    });
+
+    expect(
+      screen.getByRole("heading", { name: "Frage 1 von 6", level: 3 }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Atemuebung ueberspringen" }),
+    ).not.toBeInTheDocument();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("disables the breathing orb animation when reduced motion is requested", () => {
+  const stylesheet = readFileSync(
+    resolve(process.cwd(), "app/globals.css"),
+    "utf8",
+  );
+
+  expect(stylesheet).toMatch(
+    /\.breath-orb\.inhale::before\s*\{\s*animation: inhale 4s/,
+  );
+  expect(stylesheet).toMatch(
+    /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation-duration: 0\.01ms !important;/,
+  );
 });
 
 test("shows degraded status when backend health request fails", async () => {
