@@ -91,6 +91,14 @@ test("homepage shows a resume action and newest snapshots from the API", async (
   expect(screen.getByRole("article", { name: "Daily Snapshot vom 2026-08-03" })).toBeInTheDocument();
 });
 
+test("homepage keeps the current check-in action when journal loading fails", async () => {
+  render(<HomePage apiClient={makeMockClient({
+    listPersonalJournalSnapshots: async () => { throw new Error("unavailable"); },
+  })} />);
+  expect(await screen.findByRole("link", { name: "Morning Check-in starten" })).toHaveAttribute("href", "/check-in");
+  expect(screen.getByRole("alert")).toHaveTextContent("Die Personal Journal Eintraege konnten nicht geladen werden.");
+});
+
 test("personal journal links snapshots and supports its direct detail resolution", async () => {
   const snapshots = [{ id: "snapshot-1", browser_date: "2026-08-04", status: "completed" as const, answers: [4, "Dankbar", null, null, null, null], next_question_number: null, coach_summary: "Ein guter Start." }];
   const client = makeMockClient({ listPersonalJournalSnapshots: async () => snapshots });

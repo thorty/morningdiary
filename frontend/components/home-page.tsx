@@ -18,13 +18,22 @@ export function HomePage({ apiClient = defaultPersonalJournalApiClient, todayDat
   const todayKey = browserDate(today);
   const [checkin, setCheckin] = useState<MorningCheckinResponse | null>(null);
   const [snapshots, setSnapshots] = useState<MorningCheckinResponse[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [checkinError, setCheckinError] = useState<string | null>(null);
+  const [journalError, setJournalError] = useState<string | null>(null);
+  const [isJournalLoading, setIsJournalLoading] = useState(true);
 
   useEffect(() => {
-    void Promise.all([apiClient.getOrCreateMorningCheckin(todayKey), apiClient.listPersonalJournalSnapshots()]).then(
-      ([todayCheckin, journal]) => { setCheckin(todayCheckin); setSnapshots(journal); },
-      () => setError("Der heutige Status konnte nicht geladen werden."),
+    void apiClient.getOrCreateMorningCheckin(todayKey).then(
+      setCheckin,
+      () => setCheckinError("Der heutige Status konnte nicht geladen werden."),
     );
+  }, [apiClient, todayKey]);
+
+  useEffect(() => {
+    void apiClient.listPersonalJournalSnapshots().then(
+      setSnapshots,
+      () => setJournalError("Die Personal Journal Eintraege konnten nicht geladen werden."),
+    ).finally(() => setIsJournalLoading(false));
   }, [apiClient, todayKey]);
 
   const dateLabel = new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "numeric", month: "long" }).format(today);
@@ -33,7 +42,7 @@ export function HomePage({ apiClient = defaultPersonalJournalApiClient, todayDat
   return <main><div className="shell">
     <nav className="page-nav" aria-label="Seitennavigation"><Link href="/check-in">Morning Check-in</Link><Link href="/journal">Personal Journal</Link></nav>
     <header className="hero"><p className="date-label">{dateLabel}</p><h1 className="title">Guten Morgen.<span>Nimm dir fuenf Minuten.</span></h1></header>
-    {error ? <p className="status" role="alert">{error}</p> : checkin?.status === "completed" ? <section className="section"><DailySnapshot snapshot={checkin} /></section> : <section className="section routine-card"><div className="routine-card-heading"><h2>Deine Routine fuer heute</h2><p>{checkin ? "Dein heutiger Morning Check-in ist bereit." : "Heutiger Status wird geladen..."}</p></div><Link className="primary-action" href="/check-in">{action}<span aria-hidden="true">→</span></Link></section>}
-    <section className="section" aria-label="Letzte Daily Snapshots"><div className="journal-heading"><h2>Letzte Daily Snapshots</h2><Link href="/journal">Alle ansehen</Link></div><PersonalJournal snapshots={snapshots.slice(0, 3)} isLoading={!checkin && !error} error={null} onStartCheckin={() => { window.location.href = "/check-in"; }} /></section>
+    {checkinError ? <p className="status" role="alert">{checkinError}</p> : checkin?.status === "completed" ? <section className="section"><DailySnapshot snapshot={checkin} /></section> : <section className="section routine-card"><div className="routine-card-heading"><h2>Deine Routine fuer heute</h2><p>{checkin ? "Dein heutiger Morning Check-in ist bereit." : "Heutiger Status wird geladen..."}</p></div><Link className="primary-action" href="/check-in">{action}<span aria-hidden="true">→</span></Link></section>}
+    <section className="section" aria-label="Letzte Daily Snapshots"><div className="journal-heading"><h2>Letzte Daily Snapshots</h2><Link href="/journal">Alle ansehen</Link></div><PersonalJournal snapshots={snapshots.slice(0, 3)} isLoading={isJournalLoading} error={journalError} onStartCheckin={() => { window.location.href = "/check-in"; }} /></section>
   </div></main>;
 }
