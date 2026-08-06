@@ -34,12 +34,17 @@ export function PersonalJournal({
   isLoading,
   error,
   onStartCheckin,
+  startCheckinHref,
 }: {
   snapshots: MorningCheckinResponse[];
   isLoading: boolean;
   error: string | null;
-  onStartCheckin: () => void;
+  onStartCheckin?: () => void;
+  startCheckinHref?: string;
 }) {
+  const sortedSnapshots = [...snapshots].sort((first, second) =>
+    second.browser_date.localeCompare(first.browser_date),
+  );
   const moodSnapshots = snapshots
     .filter((snapshot) => moodFor(snapshot) !== null)
     .slice(0, 10);
@@ -51,9 +56,13 @@ export function PersonalJournal({
       {!isLoading && !error && snapshots.length === 0 ? (
         <div className="journal-empty-state">
           <p>Noch keine Daily Snapshots vorhanden.</p>
-          <button type="button" onClick={onStartCheckin}>
-            Morning Check-in starten
-          </button>
+          {startCheckinHref ? (
+            <Link href={startCheckinHref}>Morning Check-in starten</Link>
+          ) : onStartCheckin ? (
+            <button type="button" onClick={onStartCheckin}>
+              Morning Check-in starten
+            </button>
+          ) : null}
         </div>
       ) : null}
       {moodSnapshots.length >= 2 ? (
@@ -78,7 +87,7 @@ export function PersonalJournal({
       ) : null}
       {snapshots.length > 0 ? (
         <ol className="journal-entry-list" aria-label="Daily Snapshots">
-          {snapshots.map((snapshot) => {
+          {sortedSnapshots.map((snapshot) => {
             const mood = moodFor(snapshot);
             return (
               <li key={snapshot.id}>
