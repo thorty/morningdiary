@@ -46,21 +46,51 @@ function makeMockClient(overrides: Partial<PersonalJournalApiClient> = {}): Pers
 }
 
 test("shows German base shell and privacy boundary", async () => {
-  render(<HomeScreen apiClient={makeMockClient()} />);
+  render(
+    <HomeScreen
+      apiClient={makeMockClient()}
+      todayDateProvider={() => new Date("2026-08-04T12:00:00")}
+    />,
+  );
 
   expect(
     screen.getByRole("heading", {
-      name: "Morning Coach",
+      name: "Guten Tag. Nimm dir fuenf Minuten.",
       level: 1,
     }),
   ).toBeInTheDocument();
-  expect(screen.getByText(/nur die Antworten deines aktuellen Morning Check-ins an OpenAI gesendet/i)).toBeInTheDocument();
-  expect(screen.getByRole("heading", { name: "Morning Check-in", level: 2 })).toBeInTheDocument();
+  expect(screen.getByText(/Antworten aus dem aktuellen Morning Check-in an OpenAI gesendet/i)).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Deine Routine fuer heute", level: 2 })).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "Personal Journal", level: 2 })).toBeInTheDocument();
+  expect(screen.getByText("Dienstag, 4. August")).toBeInTheDocument();
+  expect(screen.getByText("Guten Tag.")).toBeInTheDocument();
+  expect(screen.getByText(/Erst 30 Sekunden atmen, dann sechs ruhige Fragen/i)).toBeInTheDocument();
 
   await waitFor(() => {
     expect(screen.getByRole("status")).toHaveTextContent("Journal-Service bereit.");
   });
+});
+
+test("shows a retryable German error when starting the check-in fails", async () => {
+  render(
+    <HomeScreen
+      apiClient={
+        makeMockClient({
+          getOrCreateMorningCheckin: async () => {
+            throw new Error("backend down");
+          },
+        })
+      }
+    />,
+  );
+
+  const startButton = screen.getByRole("button", { name: "Morning Check-in starten" });
+  fireEvent.click(startButton);
+
+  await waitFor(() => {
+    expect(screen.getByText("Der Morning Check-in konnte gerade nicht gestartet werden.")).toBeInTheDocument();
+  });
+  expect(startButton).toBeEnabled();
 });
 
 test("starts check-in with browser-local date and can skip breathing exercise", async () => {
@@ -244,11 +274,9 @@ test("resumes an unfinished check-in at the next question", async () => {
 
   fireEvent.click(screen.getByRole("button", { name: "Morning Check-in starten" }));
   await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Atemuebung ueberspringen" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Frage 3 von 6", level: 3 })).toBeInTheDocument();
   });
-  fireEvent.click(screen.getByRole("button", { name: "Atemuebung ueberspringen" }));
-
-  expect(screen.getByRole("heading", { name: "Frage 3 von 6", level: 3 })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Atemuebung ueberspringen" })).not.toBeInTheDocument();
 });
 
 test("restarts unfinished check-in and resets to question one", async () => {
@@ -281,9 +309,8 @@ test("restarts unfinished check-in and resets to question one", async () => {
 
   fireEvent.click(screen.getByRole("button", { name: "Morning Check-in starten" }));
   await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Atemuebung ueberspringen" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Frage 3 von 6", level: 3 })).toBeInTheDocument();
   });
-  fireEvent.click(screen.getByRole("button", { name: "Atemuebung ueberspringen" }));
   fireEvent.click(screen.getByRole("button", { name: "Morning Check-in neu starten" }));
 
   await waitFor(() => {

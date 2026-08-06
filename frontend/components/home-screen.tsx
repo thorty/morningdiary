@@ -45,6 +45,17 @@ function breathingCue(secondsRemaining: number, totalDurationSeconds: number): s
   return "6 Sekunden ausatmen";
 }
 
+function greetingFor(date: Date): string {
+  const hour = date.getHours();
+  if (hour < 11) {
+    return "Guten Morgen";
+  }
+  if (hour < 18) {
+    return "Guten Tag";
+  }
+  return "Guten Abend";
+}
+
 export function HomeScreen({
   apiClient = defaultClient,
   todayDateProvider = () => new Date(),
@@ -139,7 +150,7 @@ export function HomeScreen({
       setCurrentQuestionNumber(checkin.next_question_number);
       setSecondsRemaining(breathingDurationSeconds);
       setQuestionError(null);
-      setViewState(checkin.status === "completed" ? "questionnaire" : "breathing");
+      setViewState(checkin.status === "unfinished" && checkin.next_question_number === 1 ? "breathing" : "questionnaire");
     } catch {
       setStartError("Der Morning Check-in konnte gerade nicht gestartet werden.");
     } finally {
@@ -262,6 +273,12 @@ export function HomeScreen({
 
   const activeCheckinId = activeCheckin?.id;
   const activeCheckinDate = activeCheckin?.browser_date;
+  const today = todayDateProvider();
+  const formattedDate = new Intl.DateTimeFormat("de-DE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(today);
   const progressLabel = currentQuestionNumber === null ? "Fragen abgeschlossen" : `Frage ${currentQuestionNumber} von ${QUESTION_COUNT}`;
   const currentPrompt =
     currentQuestionNumber === null ? "Alle sechs Fragen wurden bereits eingereicht." : QUESTIONS[currentQuestionNumber - 1];
@@ -270,29 +287,40 @@ export function HomeScreen({
   return (
     <main>
       <div className="shell">
-        <h1 className="title">Morning Coach</h1>
-        <p className="lead">
-          Dein privates Personal Journal fuer einen klaren Morning Check-in am heutigen Tag.
-        </p>
-
-        <p className="privacy-note">
-          Hinweis: Fuer die optionale Coach Summary werden nur die Antworten deines aktuellen Morning
-          Check-ins an OpenAI gesendet. Dein API-Key bleibt ausschliesslich im Backend.
-        </p>
+        <header className="hero">
+          <p className="date-label">{formattedDate}</p>
+          <h1 className="title">
+            {greetingFor(today)}.
+            <span>Nimm dir fuenf Minuten.</span>
+          </h1>
+          <p className="lead">
+            Erst 30 Sekunden atmen, dann sechs ruhige Fragen. Am Ende steht dein Daily Snapshot mit
+            Stimmung, Fokus und einer optionalen Coach Summary.
+          </p>
+        </header>
 
         <section className="section" aria-label="Morning Check-in">
-          <h2>Morning Check-in</h2>
+          <div className="routine-card">
+            <div className="routine-card-heading">
+              <h2>Deine Routine fuer heute</h2>
+              <p>Ein kurzer Moment fuer Dankbarkeit und Klarheit.</p>
+            </div>
 
-          {viewState === "start" ? (
-            <>
-              <p>Bereit fuer deine sechs Fragen mit Atemuebung als Einstieg.</p>
-              <button type="button" onClick={() => void startMorningCheckin()} disabled={isStarting}>
-                {isStarting ? "Morning Check-in startet..." : "Morning Check-in starten"}
-              </button>
-            </>
-          ) : null}
+            {viewState === "start" ? (
+              <>
+                <button className="primary-action" type="button" onClick={() => void startMorningCheckin()} disabled={isStarting}>
+                  {isStarting ? "Morning Check-in startet..." : "Morning Check-in starten"}
+                  <span aria-hidden="true">→</span>
+                </button>
+                <div className="routine-facts" aria-label="Ablauf der Routine">
+                  <span>30 s atmen</span>
+                  <span>6 Fragen</span>
+                  <span>1 Daily Snapshot</span>
+                </div>
+              </>
+            ) : null}
 
-          {viewState === "breathing" ? (
+            {viewState === "breathing" ? (
             <div className="breathing-card">
               <h3>Atemuebung</h3>
               <p>{breathingCue(secondsRemaining, breathingDurationSeconds)}</p>
@@ -359,10 +387,11 @@ export function HomeScreen({
             </div>
           ) : null}
 
-          {activeCheckinDate && activeCheckinId ? (
-            <p className="status">Aktiver Morning Check-in: {activeCheckinDate}</p>
-          ) : null}
-          {startError ? <p className="status">{startError}</p> : null}
+            {activeCheckinDate && activeCheckinId ? (
+              <p className="status">Aktiver Morning Check-in: {activeCheckinDate}</p>
+            ) : null}
+            {startError ? <p className="status" role="alert">{startError}</p> : null}
+          </div>
         </section>
 
         <section className="section" aria-label="Personal Journal">
@@ -392,6 +421,10 @@ export function HomeScreen({
 
         <p className="status" role="status">
           {serviceStatus}
+        </p>
+        <p className="privacy-note">
+          Fuer die optionale Coach Summary werden nur Antworten aus dem aktuellen Morning Check-in an
+          OpenAI gesendet. Dein API-Key bleibt ausschliesslich im Backend.
         </p>
       </div>
     </main>
