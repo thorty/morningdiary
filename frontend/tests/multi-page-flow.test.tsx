@@ -184,6 +184,46 @@ test("personal journal links snapshots and supports its direct detail resolution
   expect(await screen.findByText("Ein guter Start.")).toBeInTheDocument();
 });
 
+test("direct Daily Snapshot detail resolves its saved snapshot, shows all responses, and stays immutable after reload", async () => {
+  const snapshots = [
+    {
+      id: "other-snapshot",
+      browser_date: "2026-08-03",
+      status: "completed" as const,
+      answers: [1, "Andere Antwort", null, null, null, null],
+      next_question_number: null,
+      coach_summary: "Andere Zusammenfassung",
+    },
+    {
+      id: "snapshot-1",
+      browser_date: "2026-08-04",
+      status: "completed" as const,
+      answers: [4, "Dankbar", "Den Druck", "Ein Spaziergang", "Zeit ohne Termine", "Geduldig bleiben"],
+      next_question_number: null,
+      coach_summary: null,
+      coach_summary_status: "unavailable" as const,
+      coach_summary_retry_available: true,
+    },
+  ];
+  const listPersonalJournalSnapshots = vi.fn(async () => snapshots);
+  const client = makeMockClient({
+    listPersonalJournalSnapshots,
+  });
+
+  const { unmount } = render(<DailySnapshotPage id="snapshot-1" apiClient={client} />);
+
+  expect(await screen.findByText("Die Coach Summary konnte gerade nicht erstellt werden. Dein Daily Snapshot bleibt vollständig gespeichert.")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Coach Summary erneut versuchen" })).not.toBeInTheDocument();
+  expect(screen.queryByText("Andere Zusammenfassung")).not.toBeInTheDocument();
+  expect(screen.getByRole("list", { name: "Deine Antworten" })).toHaveTextContent("Stimmung am Morgen4 von 5 - GutWofür du dankbar bistDankbarWas du loslassen möchtestDen DruckWas dir Energie gibtEin SpaziergangWas diesen Tag gut machtZeit ohne TermineDeine freundliche AbsichtGeduldig bleiben");
+
+  unmount();
+  render(<DailySnapshotPage id="snapshot-1" apiClient={client} />);
+
+  expect(await screen.findByText("Geduldig bleiben")).toBeInTheDocument();
+  expect(listPersonalJournalSnapshots).toHaveBeenCalledTimes(2);
+});
+
 test("unknown Daily Snapshot IDs show an understandable not-found state", async () => {
   render(<DailySnapshotPage id="missing" apiClient={makeMockClient()} />);
   expect(await screen.findByRole("heading", { name: "Daily Snapshot nicht gefunden" })).toBeInTheDocument();
