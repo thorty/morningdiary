@@ -1062,11 +1062,11 @@ test("renders generated coach summary after completing final answer", async () =
     expect(completeMorningCheckin).toHaveBeenCalledWith("checkin-1");
   });
   expect(
-    screen.getByText("Du startest klar und freundlich in den Tag."),
-  ).toBeInTheDocument();
+    screen.getAllByText("Du startest klar und freundlich in den Tag."),
+  ).toHaveLength(2);
 });
 
-test("renders personal journal snapshots newest first with and without summary", async () => {
+test("renders personal journal entries newest first with mood and previews", async () => {
   render(
     <HomeScreen
       apiClient={makeMockClient({
@@ -1100,18 +1100,12 @@ test("renders personal journal snapshots newest first with and without summary",
   expect(
     screen.getByRole("article", { name: "Daily Snapshot vom 2026-08-04" }),
   ).toBeInTheDocument();
-  expect(screen.getByText("Stimmung: 4 von 5 - Gut")).toBeInTheDocument();
-  expect(screen.getByText("Stimmung: Nicht angegeben")).toBeInTheDocument();
+  expect(screen.getByText("Stimmung 4 von 5 - Gut")).toBeInTheDocument();
+  expect(screen.getByText("Stimmung nicht angegeben")).toBeInTheDocument();
   expect(screen.getByText("Only a short answer")).toBeInTheDocument();
   expect(
     screen.getByText("Du bleibst auf einem guten Weg."),
   ).toBeInTheDocument();
-  expect(
-    screen.getByText(
-      "Für heute gibt es keine Zusammenfassung. Dein Daily Snapshot bleibt vollständig.",
-    ),
-  ).toBeInTheDocument();
-
   const snapshots = screen
     .getAllByRole("article")
     .filter((article) =>
@@ -1122,19 +1116,35 @@ test("renders personal journal snapshots newest first with and without summary",
   ).toEqual(["Daily Snapshot vom 2026-08-05", "Daily Snapshot vom 2026-08-04"]);
 });
 
-test("shows all six responses without inventing mood or coach summary for a blank snapshot", async () => {
+test("shows a compact mood history for at most the ten most recent valid moods", async () => {
   render(
     <HomeScreen
       apiClient={makeMockClient({
         listPersonalJournalSnapshots: async () => [
           {
-            id: "blank-snapshot",
+            id: "latest",
             browser_date: "2026-08-06",
             status: "completed",
-            answers: [null, null, null, null, null, null],
+            answers: [5, null, null, null, null, null],
             next_question_number: null,
             coach_summary: null,
           },
+          {
+            id: "second",
+            browser_date: "2026-08-05",
+            status: "completed",
+            answers: [2, null, null, null, null, null],
+            next_question_number: null,
+            coach_summary: null,
+          },
+          ...Array.from({ length: 10 }, (_, index) => ({
+            id: `older-${index}`,
+            browser_date: `2026-07-${String(30 - index).padStart(2, "0")}`,
+            status: "completed" as const,
+            answers: [3, null, null, null, null, null],
+            next_question_number: null,
+            coach_summary: null,
+          })),
         ],
       })}
     />,
@@ -1142,19 +1152,47 @@ test("shows all six responses without inventing mood or coach summary for a blan
 
   await waitFor(() => {
     expect(
-      screen.getByRole("article", { name: "Daily Snapshot vom 2026-08-06" }),
+      screen.getByRole("heading", { name: "Dein Stimmungsverlauf", level: 3 }),
     ).toBeInTheDocument();
   });
-  expect(screen.getByText("Stimmung: Nicht angegeben")).toBeInTheDocument();
   expect(
-    screen.getByText(
-      "Für heute gibt es keine Zusammenfassung. Dein Daily Snapshot bleibt vollständig.",
-    ),
-  ).toBeInTheDocument();
-  expect(screen.getAllByText("Keine Antwort")).toHaveLength(6);
+    screen.getByRole("list", { name: "Stimmungswerte der letzten Tage" }),
+  ).toHaveTextContent("5 / 5");
   expect(
-    screen.queryByRole("button", { name: /erneut|retry/i }),
-  ).not.toBeInTheDocument();
+    screen.getByRole("list", { name: "Stimmungswerte der letzten Tage" }).children,
+  ).toHaveLength(10);
+});
+
+test("distinguishes an empty journal from a journal loading error", async () => {
+  const { rerender } = render(
+    <HomeScreen apiClient={makeMockClient()} />,
+  );
+
+  await waitFor(() => {
+    expect(screen.getByText("Noch keine Daily Snapshots vorhanden.")).toBeInTheDocument();
+  });
+  expect(
+    screen.getAllByRole("button", { name: "Morning Check-in starten" }),
+  ).toHaveLength(2);
+
+  rerender(
+    <HomeScreen
+      apiClient={makeMockClient({
+        listPersonalJournalSnapshots: async () => {
+          throw new Error("unavailable");
+        },
+      })}
+    />,
+  );
+
+  await waitFor(() => {
+    expect(
+      screen.getByRole("alert", {
+        name: "",
+      }),
+    ).toHaveTextContent("Die Personal Journal Eintraege konnten nicht geladen werden.");
+  });
+  expect(screen.queryByText("Noch keine Daily Snapshots vorhanden.")).not.toBeInTheDocument();
 });
 
 test("downloads personal journal export through German action", async () => {
@@ -1209,5 +1247,70 @@ test("downloads personal journal export through German action", async () => {
     clickSpy.mockRestore();
     appendSpy.mockRestore();
     removeSpy.mockRestore();
+  }
+});
+
+test("keeps the export action available and reports its failure", async () => {
+  render(
+    <HomeScreen
+      apiClient={makeMockClient({
+        exportPersonalJournal: async () => {
+          throw new Error("unavailable");
+        },
+      })}
+    />,
+  );
+
+  const exportButton = screen.getByRole("button", {
+    name: "Journal Export herunterladen",
+  });
+  fireEvent.click(exportButton);
+
+  await waitFor(() => {
+    expect(
+      screen.getByRole("alert", {
+        name: "",
+      }),
+    ).toHaveTextContent("Der Journal Export konnte nicht heruntergeladen werden.");
+  });
+  expect(exportButton).toBeEnabled();
+});
+
+test("shows an export loading state until the download is ready", async () => {
+  let resolveExport: (value: { snapshots: [] }) => void;
+  const exportPersonalJournal = vi.fn<PersonalJournalApiClient["exportPersonalJournal"]>(
+    () =>
+      new Promise((resolve) => {
+        resolveExport = resolve;
+      }),
+  );
+  const originalCreateObjectURL = URL.createObjectURL;
+  const originalRevokeObjectURL = URL.revokeObjectURL;
+  const clickSpy = vi
+    .spyOn(HTMLAnchorElement.prototype, "click")
+    .mockImplementation(() => {});
+  URL.createObjectURL = vi.fn(() => "blob:test-url");
+  URL.revokeObjectURL = vi.fn();
+
+  try {
+    render(
+      <HomeScreen apiClient={makeMockClient({ exportPersonalJournal })} />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Journal Export herunterladen" }),
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Journal Export wird vorbereitet..." }),
+    ).toBeDisabled();
+
+    await act(async () => {
+      resolveExport!({ snapshots: [] });
+    });
+  } finally {
+    URL.createObjectURL = originalCreateObjectURL;
+    URL.revokeObjectURL = originalRevokeObjectURL;
+    clickSpy.mockRestore();
   }
 });

@@ -118,6 +118,126 @@ h3 {
   box-shadow: var(--shadow);
 }
 
+.journal-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.journal-heading .date-label {
+  margin-bottom: 0.35rem;
+}
+
+.journal-heading h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+}
+
+.journal-export,
+.journal-empty-state button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.65rem 0.85rem;
+  color: var(--ink);
+  background: var(--surface);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.journal-empty-state,
+.mood-history,
+.journal-entry-list article {
+  border: 1px solid rgba(234, 219, 202, 0.8);
+  border-radius: 1.25rem;
+  background: rgba(255, 253, 249, 0.78);
+}
+
+.journal-empty-state {
+  padding: 1.25rem;
+}
+
+.journal-empty-state p {
+  margin-top: 0;
+}
+
+.mood-history {
+  padding: 1.25rem;
+  background: linear-gradient(130deg, #fff2d1, #f9e1d3);
+}
+
+.mood-history h3 {
+  margin: 0.25rem 0 1rem;
+  font-size: 1.4rem;
+}
+
+.mood-history ol {
+  display: flex;
+  align-items: end;
+  gap: 0.5rem;
+  height: 8.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mood-history li {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  grid-template-rows: auto auto 1fr;
+  gap: 0.2rem;
+  color: var(--muted);
+  font-size: 0.67rem;
+}
+
+.mood-history strong {
+  color: var(--ink);
+  font-size: 0.75rem;
+}
+
+.mood-history i {
+  align-self: end;
+  min-height: 0.45rem;
+  border-radius: 0.45rem 0.45rem 0 0;
+  background: var(--primary);
+}
+
+.journal-entry-list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journal-entry-list article {
+  display: grid;
+  grid-template-columns: minmax(6rem, 0.7fr) 2fr;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+}
+
+.journal-entry-list article > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.journal-entry-list div > p {
+  margin: 0.45rem 0 0;
+  line-height: 1.45;
+}
+
+.journal-mood {
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .question-prompt {
   margin: 0.5rem 0 1.5rem;
   font-family: Georgia, "Times New Roman", serif;
@@ -495,6 +615,14 @@ h3 {
   .snapshot-summary,
   .snapshot-responses {
     padding-inline: 1.25rem;
+  }
+  .journal-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+  .journal-entry-list article {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 }
 

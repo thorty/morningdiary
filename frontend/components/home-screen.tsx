@@ -12,6 +12,7 @@ import type {
   MorningCheckinResponse,
 } from "@/lib/api/types";
 import { DailySnapshot, MOOD_LABELS } from "@/components/daily-snapshot";
+import { PersonalJournal } from "@/components/personal-journal";
 
 type HomeScreenProps = {
   apiClient?: PersonalJournalApiClient;
@@ -93,6 +94,7 @@ export function HomeScreen({
     MorningCheckinResponse[]
   >([]);
   const [journalLoadError, setJournalLoadError] = useState<string | null>(null);
+  const [isJournalLoading, setIsJournalLoading] = useState(true);
   const [journalExportError, setJournalExportError] = useState<string | null>(
     null,
   );
@@ -125,6 +127,7 @@ export function HomeScreen({
       .then((snapshots) => {
         if (isMounted) {
           setJournalSnapshots(snapshots);
+          setJournalLoadError(null);
         }
       })
       .catch(() => {
@@ -132,6 +135,11 @@ export function HomeScreen({
           setJournalLoadError(
             "Die Personal Journal Eintraege konnten nicht geladen werden.",
           );
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsJournalLoading(false);
         }
       });
 
@@ -215,6 +223,17 @@ export function HomeScreen({
         await apiClient.completeMorningCheckin(checkinId);
       setActiveCheckin(completedCheckin);
       setCurrentQuestionNumber(completedCheckin.next_question_number);
+      setJournalSnapshots((snapshots) => {
+        const existingSnapshotIndex = snapshots.findIndex(
+          (snapshot) => snapshot.id === completedCheckin.id,
+        );
+        if (existingSnapshotIndex === -1) {
+          return [completedCheckin, ...snapshots];
+        }
+        return snapshots.map((snapshot) =>
+          snapshot.id === completedCheckin.id ? completedCheckin : snapshot,
+        );
+      });
     } catch (error) {
       const message =
         error instanceof Error
@@ -529,28 +548,31 @@ export function HomeScreen({
         </section>
 
         <section className="section" aria-label="Personal Journal">
-          <h2>Personal Journal</h2>
-          <button
-            type="button"
-            onClick={() => void downloadJournalExport()}
-            disabled={isExporting}
-          >
-            {isExporting
-              ? "Journal Export wird vorbereitet..."
-              : "Journal Export herunterladen"}
-          </button>
-          {journalSnapshots.length === 0 && !journalLoadError ? (
-            <p>Noch keine Daily Snapshots vorhanden.</p>
-          ) : null}
-          {journalLoadError ? (
-            <p className="status">{journalLoadError}</p>
-          ) : null}
+          <div className="journal-heading">
+            <div>
+              <p className="date-label">Dein Archiv</p>
+              <h2>Personal Journal</h2>
+            </div>
+            <button
+              className="journal-export"
+              type="button"
+              onClick={() => void downloadJournalExport()}
+              disabled={isExporting}
+            >
+              {isExporting
+                ? "Journal Export wird vorbereitet..."
+                : "Journal Export herunterladen"}
+            </button>
+          </div>
+          <PersonalJournal
+            snapshots={journalSnapshots}
+            isLoading={isJournalLoading}
+            error={journalLoadError}
+            onStartCheckin={() => void startMorningCheckin()}
+          />
           {journalExportError ? (
-            <p className="status">{journalExportError}</p>
+            <p className="status" role="alert">{journalExportError}</p>
           ) : null}
-          {journalSnapshots.map((snapshot) => (
-            <DailySnapshot key={snapshot.id} snapshot={snapshot} />
-          ))}
         </section>
 
         <p className="status" role="status">
