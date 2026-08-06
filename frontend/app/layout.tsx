@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ThemeApplier } from "@/components/theme-applier";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ type RootLayoutProps = Readonly<{ children: React.ReactNode }>;
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="de">
-      <body>{children}</body>
+      <body><ThemeApplier />{children}</body>
     </html>
   );
 }
