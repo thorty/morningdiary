@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import React from "react";
 
 import {
-  COACH_SUMMARY_UNAVAILABLE_NOTE,
   DailySnapshot,
   MOOD_LABELS,
 } from "@/components/daily-snapshot";
@@ -328,7 +327,7 @@ export function MorningCheckin({
                   summaryState={
                     isCompleting
                       ? "loading"
-                      : activeCheckin.coach_summary === COACH_SUMMARY_UNAVAILABLE_NOTE
+                      : activeCheckin.coach_summary_status === "unavailable"
                         ? "error"
                         : "ready"
                   }

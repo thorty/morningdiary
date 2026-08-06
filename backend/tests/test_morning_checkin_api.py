@@ -339,6 +339,7 @@ def test_completes_checkin_and_returns_daily_snapshot(tmp_path: Path) -> None:
         "answers": [4, "Dankbar fuer Ruhe", None, None, None, None],
         "next_question_number": None,
         "coach_summary": "Deine Zusammenfassung konnte heute nicht erstellt werden.",
+        "coach_summary_status": "unavailable",
     }
 
 
@@ -361,6 +362,7 @@ def test_blank_checkin_can_complete_and_stays_blank(tmp_path: Path) -> None:
     assert response.json()["answers"] == [None, None, None, None, None, None]
     assert response.json()["next_question_number"] is None
     assert response.json()["coach_summary"] is None
+    assert response.json()["coach_summary_status"] == "not_requested"
 
 
 def test_rejects_completion_before_all_questions_are_submitted(tmp_path: Path) -> None:

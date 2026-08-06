@@ -7,6 +7,8 @@ from uuid import uuid4
 
 from tinydb import Query, TinyDB
 
+from app.coach_summary import COACH_SUMMARY_UNAVAILABLE_NOTE
+
 
 class MorningCheckinRecord(TypedDict):
     id: str
@@ -15,6 +17,7 @@ class MorningCheckinRecord(TypedDict):
     answers: list[int | str | None]
     next_question_number: int | None
     coach_summary: str | None
+    coach_summary_status: Literal["available", "unavailable", "not_requested"]
 
 
 class MorningCheckinNotFoundError(Exception):
@@ -205,6 +208,13 @@ class PersonalJournalStore:
             "answers": answers,
             "next_question_number": next_question_number,
             "coach_summary": cast(str | None, row.get("coach_summary")),
+            "coach_summary_status": (
+                "unavailable"
+                if row.get("coach_summary") == COACH_SUMMARY_UNAVAILABLE_NOTE
+                else "available"
+                if row.get("coach_summary")
+                else "not_requested"
+            ),
         }
 
     def save_coach_summary(self, checkin_id: str, coach_summary: str) -> MorningCheckinRecord:

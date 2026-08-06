@@ -22,9 +22,6 @@ export const MOOD_LABELS: Record<number, string> = {
   5: "Sehr gut",
 };
 
-export const COACH_SUMMARY_UNAVAILABLE_NOTE =
-  "Deine Zusammenfassung konnte heute nicht erstellt werden.";
-
 function responseText(answer: MorningCheckinAnswer, index: number): string {
   if (answer === null || answer === undefined || answer === "") {
     return "Keine Antwort";

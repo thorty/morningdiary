@@ -5,6 +5,7 @@ export type HealthResponse = {
 export type MorningCheckinStatus = "unfinished" | "completed";
 
 export type MorningCheckinAnswer = number | string | null;
+export type CoachSummaryStatus = "available" | "unavailable" | "not_requested";
 
 export type MorningCheckinResponse = {
   id: string;
@@ -13,6 +14,7 @@ export type MorningCheckinResponse = {
   answers: MorningCheckinAnswer[];
   next_question_number: number | null;
   coach_summary: string | null;
+  coach_summary_status?: CoachSummaryStatus;
 };
 
 export type SaveMorningCheckinAnswerRequest = {

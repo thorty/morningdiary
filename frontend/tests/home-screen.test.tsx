@@ -798,7 +798,8 @@ test("shows fallback note when completed snapshot has no generated summary", asy
           answers: [null, "Only a short answer", null, null, null, null],
           next_question_number: null,
           coach_summary:
-            "Die Coach Summary konnte gerade nicht erstellt werden. Dein Daily Snapshot bleibt vollständig gespeichert.",
+            "Deine Zusammenfassung konnte heute nicht erstellt werden.",
+          coach_summary_status: "unavailable",
         }),
       })}
     />,

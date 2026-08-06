@@ -176,7 +176,7 @@ def create_app(
         has_any_answer = any(answer is not None for answer in checkin["answers"])
         can_retry_failed_summary = (
             has_any_answer
-            and checkin["coach_summary"] == COACH_SUMMARY_UNAVAILABLE_NOTE
+            and checkin["coach_summary_status"] == "unavailable"
             and configured_generator is not None
         )
         if completion_outcome != "newly_completed" and not can_retry_failed_summary:
@@ -201,7 +201,7 @@ def create_app(
 
         if has_any_answer and (
             checkin["coach_summary"] is None
-            or checkin["coach_summary"] == COACH_SUMMARY_UNAVAILABLE_NOTE
+            or checkin["coach_summary_status"] == "unavailable"
         ):
             if configured_generator is None:
                 checkin = store.save_coach_summary(checkin_id, COACH_SUMMARY_UNAVAILABLE_NOTE)

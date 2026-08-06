@@ -691,6 +691,7 @@ h3 {
 .snapshot-summary-error p {
   margin: 0;
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .snapshot-summary-loading span {
