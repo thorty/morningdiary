@@ -291,17 +291,17 @@ test("keeps question one visible when the breathing timer fires after skipping",
   }
 });
 
-test("disables the breathing orb animation when reduced motion is requested", () => {
+test("keeps the breathing orb size transition subject to reduced motion", () => {
   const stylesheet = readFileSync(
     resolve(process.cwd(), "app/globals.css"),
     "utf8",
   );
 
   expect(stylesheet).toMatch(
-    /\.breath-orb\.inhale::before\s*\{\s*animation: inhale 4s/,
+    /\.breath-orb\s*\{[\s\S]*transition: width var\(--motion-fast\)/,
   );
   expect(stylesheet).toMatch(
-    /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation-duration: 0\.01ms !important;/,
+    /@media \(prefers-reduced-motion: reduce\)[\s\S]*transition-duration: 0\.01ms !important;/,
   );
 });
 

@@ -542,12 +542,12 @@ h3 {
 .breath-orb {
   position: relative;
   display: grid;
-  width: min(15rem, 55vw);
+  width: min(var(--orb-diameter, 12rem), 55vw);
   place-items: center;
   aspect-ratio: 1;
   border-radius: 50%;
   background: conic-gradient(var(--primary) var(--breathing-progress), var(--color-line) 0);
-  transition: background 250ms linear;
+  transition: width var(--motion-fast), background 250ms linear;
 }
 
 .breath-orb::before {
@@ -555,18 +555,10 @@ h3 {
   aspect-ratio: 1;
   border-radius: 50%;
   content: "";
-  background: radial-gradient(circle at 35% 30%, var(--color-orb-start), var(--color-orb-middle) 55%, var(--color-orb-end));
+  background: var(--orb-gradient, radial-gradient(circle at 35% 30%, var(--color-orb-start), var(--color-orb-middle) 55%, var(--color-orb-end)));
   box-shadow:
     0 0 0 1rem color-mix(in srgb, var(--accent) 32%, transparent),
     0 0 0 2rem color-mix(in srgb, var(--accent) 16%, transparent);
-}
-
-.breath-orb.inhale::before {
-  animation: inhale 4s ease-in-out both;
-}
-
-.breath-orb.exhale::before {
-  animation: exhale 6s ease-in-out both;
 }
 
 .breathing-cue {
@@ -753,24 +745,6 @@ h3 {
   to {
     opacity: 1;
     transform: scale(1);
-  }
-}
-
-@keyframes inhale {
-  from {
-    transform: scale(0.72);
-  }
-  to {
-    transform: scale(1);
-  }
-}
-
-@keyframes exhale {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(0.72);
   }
 }
 
