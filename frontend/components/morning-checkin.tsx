@@ -272,11 +272,11 @@ export function MorningCheckin({
               disabled={isStarting}
             >
               {isStarting
-                ? "Morning Check-in startet..."
+                ? "Check-in startet..."
                 : shouldResume
-                  ? "Morning Check-in fortsetzen"
-                  : "Morning Check-in starten"}
-              <span aria-hidden="true">→</span>
+                  ? "Check-in fortsetzen"
+                  : "Check-in starten"}
+              
             </button>
             <div className="routine-facts" aria-label="Ablauf der Routine">
               <span>30 s atmen</span>
@@ -289,7 +289,7 @@ export function MorningCheckin({
           <div className="breathing-card" aria-live="polite">
             <h3>Breathing Exercise</h3>
             <BreathingAnimation />
-            <p className="breathing-cue">{currentBreathingCue.label}</p>
+            {/* <p className="breathing-cue">{currentBreathingCue.label}</p>            
             <p className="breathing-detail">{currentBreathingCue.detail}</p>
             <p className="breathing-countdown">
               {secondsRemaining} Sekunden verbleibend
@@ -298,7 +298,7 @@ export function MorningCheckin({
               aria-label="Fortschritt der Breathing Exercise"
               value={breathingDurationSeconds - secondsRemaining}
               max={breathingDurationSeconds}
-            />
+            /> */}
             <button
               type="button"
               onClick={finishBreathing}

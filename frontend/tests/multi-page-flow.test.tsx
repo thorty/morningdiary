@@ -170,7 +170,7 @@ test("homepage keeps the current check-in action when journal loading fails", as
   render(<HomePage apiClient={makeMockClient({
     listPersonalJournalSnapshots: async () => { throw new Error("unavailable"); },
   })} />);
-  expect(await screen.findByRole("link", { name: "Morning Check-in starten" })).toHaveAttribute("href", "/check-in");
+  expect(await screen.findByRole("link", { name: "Check-in starten" })).toHaveAttribute("href", "/check-in");
   expect(screen.getByRole("alert")).toHaveTextContent("Die Personal Journal Einträge konnten nicht geladen werden.");
 });
 

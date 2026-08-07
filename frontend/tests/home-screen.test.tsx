@@ -103,7 +103,7 @@ test("shows a retryable German error when starting the check-in fails", async ()
   );
 
   const startButton = screen.getByRole("button", {
-    name: "Morning Check-in starten",
+    name: "Check-in starten",
   });
   fireEvent.click(startButton);
 
@@ -137,7 +137,7 @@ test("starts check-in with browser-local date and can skip breathing exercise", 
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
 
   await waitFor(() => {
@@ -175,7 +175,7 @@ test("finishes breathing exercise and reaches first question", async () => {
     />,
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
 
   await waitFor(() => {
@@ -203,7 +203,7 @@ test("shows the breathing rhythm, countdown, and progress before automatically o
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Morning Check-in starten" }),
+      screen.getByRole("button", { name: "Check-in starten" }),
     );
 
     await act(async () => {});
@@ -243,7 +243,7 @@ test("uses real elapsed time when a delayed browser timer catches up", async () 
     render(<HomeScreen apiClient={makeMockClient()} breathingDurationSeconds={30} />);
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Morning Check-in starten" }),
+      screen.getByRole("button", { name: "Check-in starten" }),
     );
     await act(async () => {});
 
@@ -267,7 +267,7 @@ test("keeps question one visible when the breathing timer fires after skipping",
     render(<HomeScreen apiClient={makeMockClient()} breathingDurationSeconds={30} />);
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Morning Check-in starten" }),
+      screen.getByRole("button", { name: "Check-in starten" }),
     );
     await act(async () => {});
     fireEvent.click(
@@ -336,7 +336,7 @@ test("saves mood answer and advances to next question", async () => {
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -392,7 +392,7 @@ test("saves an optional free-text answer before advancing", async () => {
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -431,7 +431,7 @@ test("keeps the question visible and allows retry when saving fails", async () =
     <HomeScreen apiClient={makeMockClient({ saveMorningCheckinAnswer })} />,
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -486,7 +486,7 @@ test("shows a saving state and prevents duplicate answer submissions", async () 
     <HomeScreen apiClient={makeMockClient({ saveMorningCheckinAnswer })} />,
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -568,7 +568,7 @@ test("allows retry when completion fails after the sixth saved response", async 
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -627,7 +627,7 @@ test("marks the selected mood and saves its valid rating", async () => {
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -669,7 +669,7 @@ test("resumes an unfinished check-in at the next question", async () => {
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -710,7 +710,7 @@ test("restarts unfinished check-in and resets to question one", async () => {
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -746,7 +746,7 @@ test("renders immutable completed daily snapshot when resumed as completed", asy
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -790,7 +790,7 @@ test("shows fallback note when completed snapshot has no generated summary", asy
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -881,7 +881,7 @@ test("completes a blank check-in and renders completed daily snapshot", async ()
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -953,7 +953,7 @@ test("shows an understandable processing state while completing a snapshot", asy
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -1084,7 +1084,7 @@ test("renders generated coach summary after completing final answer", async () =
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "Morning Check-in starten" }),
+    screen.getByRole("button", { name: "Check-in starten" }),
   );
   await waitFor(() => {
     expect(
@@ -1223,7 +1223,7 @@ test("distinguishes an empty journal from a journal loading error", async () => 
     expect(screen.getByText("Noch keine Daily Snapshots vorhanden.")).toBeInTheDocument();
   });
   expect(
-    screen.getAllByRole("button", { name: "Morning Check-in starten" }),
+    screen.getAllByRole("button", { name: "Check-in starten" }),
   ).toHaveLength(2);
 
   rerender(

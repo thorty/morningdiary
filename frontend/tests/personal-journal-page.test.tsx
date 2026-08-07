@@ -65,7 +65,7 @@ test("the Personal Journal route distinguishes loading and empty states and star
   resolveSnapshots!([]);
 
   expect(await screen.findByText("Noch keine Daily Snapshots vorhanden.")).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Morning Check-in starten" })).toHaveAttribute("href", "/check-in");
+  expect(screen.getByRole("link", { name: "Check-in starten" })).toHaveAttribute("href", "/check-in");
 });
 
 test("the Personal Journal route reports when snapshots cannot load", async () => {

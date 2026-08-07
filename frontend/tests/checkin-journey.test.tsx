@@ -53,7 +53,7 @@ test("takes a person from the start page through a Morning Check-in into their P
   const todayDateProvider = () => new Date("2026-08-04T12:00:00");
   const { unmount } = render(<HomePage apiClient={apiClient} todayDateProvider={todayDateProvider} />);
 
-  expect(await screen.findByRole("link", { name: "Morning Check-in starten" })).toHaveAttribute("href", "/check-in");
+  expect(await screen.findByRole("link", { name: "Check-in starten" })).toHaveAttribute("href", "/check-in");
   unmount();
 
   const checkinPage = render(<MorningCheckinPage apiClient={apiClient} todayDateProvider={todayDateProvider} />);

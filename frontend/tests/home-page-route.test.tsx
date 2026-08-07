@@ -78,7 +78,7 @@ test("the home route presents the daytime greeting, introduction, and routine", 
     }),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("link", { name: "Morning Check-in starten" }),
+    screen.getByRole("link", { name: "Check-in starten" }),
   ).toHaveAttribute("href", "/check-in");
   expect(await screen.findByText("Noch keine Daily Snapshots vorhanden.")).toBeInTheDocument();
 });

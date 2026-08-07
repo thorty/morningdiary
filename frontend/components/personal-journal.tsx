@@ -50,10 +50,10 @@ export function PersonalJournal({
         <div className="journal-empty-state">
           <p>Noch keine Daily Snapshots vorhanden.</p>
           {startCheckinHref ? (
-            <Link href={startCheckinHref}>Morning Check-in starten</Link>
+            <Link href={startCheckinHref}>Check-in starten</Link>
           ) : onStartCheckin ? (
             <button type="button" onClick={onStartCheckin}>
-              Morning Check-in starten
+              Check-in starten
             </button>
           ) : null}
         </div>
