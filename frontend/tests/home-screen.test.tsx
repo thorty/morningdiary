@@ -49,6 +49,7 @@ function makeMockClient(
     }),
     listPersonalJournalSnapshots: async () => [],
     exportPersonalJournal: async () => ({ snapshots: [] }),
+    deletePersonalJournal: async () => undefined,
     ...overrides,
   };
 }

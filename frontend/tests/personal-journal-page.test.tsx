@@ -26,6 +26,7 @@ function apiClient(snapshots: MorningCheckinResponse[] = []): PersonalJournalApi
     completeMorningCheckin: vi.fn(),
     listPersonalJournalSnapshots: vi.fn(async () => snapshots),
     exportPersonalJournal: vi.fn(async () => ({ snapshots })),
+    deletePersonalJournal: vi.fn(async () => undefined),
   };
 }
 
@@ -120,6 +121,38 @@ test("the Personal Journal route shows that the export is being prepared", async
   resolveExport!();
   await screen.findByRole("button", { name: "Journal Export herunterladen" });
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
+test("the Personal Journal configuration persists the Coach Summary choice", async () => {
+  render(<PersonalJournalPage apiClient={apiClient()} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Einstellungen" }));
+  const toggle = await screen.findByRole("checkbox", { name: "Coach Summary mit OpenAI aktivieren" });
+  expect(toggle).toBeChecked();
+  fireEvent.click(toggle);
+
+  expect(window.localStorage.getItem("morning-coach.coach-summary-enabled")).toBe("false");
+  expect(screen.getByRole("button", { name: "Historie löschen" })).toBeInTheDocument();
+});
+
+test("the Personal Journal configuration deletes visible history only after confirmation", async () => {
+  const client = apiClient([snapshot("04", "Zu löschen")]);
+  const confirm = vi.fn(() => false);
+  vi.stubGlobal("confirm", confirm);
+  render(<PersonalJournalPage apiClient={client} />);
+  await screen.findByRole("article", { name: "Daily Snapshot vom 2026-08-04" });
+  fireEvent.click(screen.getByRole("button", { name: "Einstellungen" }));
+  fireEvent.click(screen.getByRole("button", { name: "Historie löschen" }));
+
+  expect(client.deletePersonalJournal).not.toHaveBeenCalled();
+  expect(screen.getByRole("article", { name: "Daily Snapshot vom 2026-08-04" })).toBeInTheDocument();
+
+  confirm.mockReturnValue(true);
+  fireEvent.click(screen.getByRole("button", { name: "Historie löschen" }));
+
+  await waitFor(() => expect(client.deletePersonalJournal).toHaveBeenCalledOnce());
+  expect(screen.getByText("Noch keine Daily Snapshots vorhanden.")).toBeInTheDocument();
   vi.unstubAllGlobals();
 });
 

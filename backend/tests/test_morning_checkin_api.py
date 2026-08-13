@@ -481,6 +481,30 @@ def test_completion_generates_optional_coach_summary_for_non_blank_checkin(tmp_p
     assert fake_generator.calls[0]["answers"] == [4, "Ich bin dankbar fuer den ruhigen Morgen.", None, None, None, None]
 
 
+def test_completion_can_skip_coach_summary_generation(tmp_path: Path) -> None:
+    fake_generator = FakeSummaryGenerator(response_text="Soll nicht entstehen.")
+    settings = Settings(tinydb_path=tmp_path / "journal.json")
+    client = TestClient(create_app(settings, coach_summary_generator=fake_generator))
+
+    checkin = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    for question_number in range(1, 7):
+        client.post(
+            f"/api/morning-checkin/{checkin['id']}/answers",
+            json={"question_number": question_number, "answer": "Dankbar" if question_number == 2 else None},
+        )
+
+    response = client.post(
+        f"/api/morning-checkin/{checkin['id']}/complete",
+        json={"generate_coach_summary": False},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "completed"
+    assert response.json()["coach_summary"] is None
+    assert response.json()["coach_summary_status"] == "not_requested"
+    assert fake_generator.calls == []
+
+
 def test_completion_detects_english_predominance_for_summary_language(tmp_path: Path) -> None:
     fake_generator = FakeSummaryGenerator(response_text="You are doing great.")
     settings = Settings(tinydb_path=tmp_path / "journal.json")
@@ -701,6 +725,26 @@ def test_personal_journal_excludes_unfinished_checkins(tmp_path: Path) -> None:
     assert response.status_code == 200
     assert [snapshot["id"] for snapshot in response.json()] == [completed["id"]]
     assert unfinished["id"] not in [snapshot["id"] for snapshot in response.json()]
+
+
+def test_deleting_personal_journal_removes_completed_and_unfinished_checkins(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+    completed = client.put("/api/morning-checkin", params={"browser_date": "2026-07-24"}).json()
+    unfinished = client.put("/api/morning-checkin", params={"browser_date": "2026-07-25"}).json()
+    for question_number in range(1, 7):
+        client.post(
+            f"/api/morning-checkin/{completed['id']}/answers",
+            json={"question_number": question_number, "answer": None},
+        )
+    client.post(f"/api/morning-checkin/{completed['id']}/complete")
+
+    deleted = client.delete("/api/personal-journal")
+
+    assert deleted.status_code == 204
+    assert client.get("/api/personal-journal/snapshots").json() == []
+    recreated = client.put("/api/morning-checkin", params={"browser_date": "2026-07-25"}).json()
+    assert recreated["id"] != unfinished["id"]
+    assert recreated["status"] == "unfinished"
 
 
 def test_personal_journal_export_returns_all_completed_snapshots_with_answers_and_summary_data(tmp_path: Path) -> None:

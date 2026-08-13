@@ -155,6 +155,21 @@ test("completes a check-in through backend boundary", async () => {
   expect(response.coach_summary).toBe("Du bist auf einem guten Weg.");
 });
 
+test("can complete a check-in without requesting a Coach Summary", async () => {
+  const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+    new Response(JSON.stringify({ id: "abc-1", browser_date: "2026-08-04", status: "completed", answers: [], next_question_number: null, coach_summary: null }), { status: 200 }),
+  );
+  const client = createHttpPersonalJournalApiClient({ baseUrl: "http://localhost:8000", fetchImpl: fetchMock });
+
+  await client.completeMorningCheckin("abc-1", { generate_coach_summary: false });
+
+  expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/morning-checkin/abc-1/complete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ generate_coach_summary: false }),
+  });
+});
+
 test("lists completed personal journal snapshots newest first", async () => {
   const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
     new Response(
@@ -224,4 +239,13 @@ test("exports the personal journal as JSON through backend boundary", async () =
   });
   expect(response.snapshots).toHaveLength(1);
   expect(response.snapshots[0]?.id).toBe("snapshot-1");
+});
+
+test("deletes the complete Personal Journal through backend boundary", async () => {
+  const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 204 }));
+  const client = createHttpPersonalJournalApiClient({ baseUrl: "http://localhost:8000", fetchImpl: fetchMock });
+
+  await client.deletePersonalJournal();
+
+  expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/personal-journal", { method: "DELETE" });
 });

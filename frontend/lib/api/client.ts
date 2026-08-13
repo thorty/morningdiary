@@ -1,6 +1,7 @@
 import type {
   HealthResponse,
   PersonalJournalExportResponse,
+  CompleteMorningCheckinRequest,
   MorningCheckinResponse,
   SaveMorningCheckinAnswerRequest,
 } from "@/lib/api/types";
@@ -10,9 +11,10 @@ export interface PersonalJournalApiClient {
   getOrCreateMorningCheckin(browserDate: string): Promise<MorningCheckinResponse>;
   saveMorningCheckinAnswer(checkinId: string, payload: SaveMorningCheckinAnswerRequest): Promise<MorningCheckinResponse>;
   restartMorningCheckin(checkinId: string): Promise<MorningCheckinResponse>;
-  completeMorningCheckin(checkinId: string): Promise<MorningCheckinResponse>;
+  completeMorningCheckin(checkinId: string, payload?: CompleteMorningCheckinRequest): Promise<MorningCheckinResponse>;
   listPersonalJournalSnapshots(): Promise<MorningCheckinResponse[]>;
   exportPersonalJournal(): Promise<PersonalJournalExportResponse>;
+  deletePersonalJournal(): Promise<void>;
 }
 
 type HttpClientOptions = {
@@ -78,9 +80,11 @@ export function createHttpPersonalJournalApiClient(
       });
       return parseJson<MorningCheckinResponse>(response);
     },
-    async completeMorningCheckin(checkinId: string) {
+    async completeMorningCheckin(checkinId: string, payload?: CompleteMorningCheckinRequest) {
       const response = await fetchImpl(`${baseUrl}/api/morning-checkin/${checkinId}/complete`, {
         method: "POST",
+        headers: payload ? { "Content-Type": "application/json" } : undefined,
+        body: payload ? JSON.stringify(payload) : undefined,
       });
       return parseJson<MorningCheckinResponse>(response);
     },
@@ -95,6 +99,12 @@ export function createHttpPersonalJournalApiClient(
         method: "GET",
       });
       return parseJson<PersonalJournalExportResponse>(response);
+    },
+    async deletePersonalJournal() {
+      const response = await fetchImpl(`${baseUrl}/api/personal-journal`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
     },
   };
 }

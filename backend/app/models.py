@@ -39,3 +39,7 @@ class SaveMorningCheckinAnswerRequest(BaseModel):
         if isinstance(self.answer, str):
             return self
         raise ValueError("Only free-text answers are accepted for questions 2 through 6.")
+
+
+class CompleteMorningCheckinRequest(BaseModel):
+    generate_coach_summary: bool = True

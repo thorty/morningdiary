@@ -235,3 +235,6 @@ class PersonalJournalStore:
         rows = cast(list[dict[str, Any]], self._table.search(Query().status == "completed"))
         ordered = sorted(rows, key=lambda row: cast(str, row["browser_date"]), reverse=True)
         return [self._to_record(row) for row in ordered]
+
+    def delete_all_checkins(self) -> None:
+        self._table.truncate()

@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { PersonalJournal } from "@/components/personal-journal";
 import { MoodTrend } from "@/components/mood-trend";
 import { ThemePicker } from "@/components/theme-picker";
+import { ConfigurationMenu } from "@/components/configuration-menu";
 import type { PersonalJournalApiClient } from "@/lib/api/client";
 import { defaultPersonalJournalApiClient } from "@/lib/api/default-client";
 import { resolveAutomaticTheme } from "@/lib/theme";
@@ -43,9 +44,14 @@ export function PersonalJournalPage({ apiClient = defaultPersonalJournalApiClien
     }
   }
 
+  function handleJournalDeleted() {
+    setSnapshots([]);
+    setError(null);
+  }
+
   return (
     <main><div className="shell">
-      <nav className="page-nav" aria-label="Seitennavigation"><div className="page-nav-links"><Link href="/">Zur Startseite</Link><Link href="/check-in">Morning Check-in</Link></div><ThemePicker automaticTheme={resolveAutomaticTheme(snapshots)} /></nav>
+      <nav className="page-nav" aria-label="Seitennavigation"><div className="page-nav-links"><Link href="/">Zur Startseite</Link><Link href="/check-in">Morning Check-in</Link></div><div className="page-nav-settings"><ThemePicker automaticTheme={resolveAutomaticTheme(snapshots)} /><ConfigurationMenu apiClient={apiClient} onJournalDeleted={handleJournalDeleted} /></div></nav>
       <header className="hero"><p className="date-label">Dein Archiv</p><h1 className="title">Personal Journal</h1></header>
       <section className="section" aria-label="Personal Journal">
         <div className="journal-heading"><h2>Daily Snapshots</h2><button className="journal-export" type="button" onClick={() => void downloadExport()} disabled={isExporting}>{isExporting ? "Journal Export wird vorbereitet..." : "Journal Export herunterladen"}</button></div>

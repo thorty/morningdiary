@@ -13,6 +13,7 @@ import type {
   MorningCheckinAnswer,
   MorningCheckinResponse,
 } from "@/lib/api/types";
+import { loadCoachSummaryEnabled } from "@/lib/coach-summary-settings";
 
 const BREATHING_DURATION_SECONDS = 30;
 const BREATHING_CYCLE_SECONDS = 10;
@@ -170,7 +171,12 @@ export function MorningCheckin({
     setIsCompleting(true);
     setError(null);
     try {
-      const completed = await apiClient.completeMorningCheckin(checkinId);
+      const generateCoachSummary = loadCoachSummaryEnabled();
+      const completed = generateCoachSummary
+        ? await apiClient.completeMorningCheckin(checkinId)
+        : await apiClient.completeMorningCheckin(checkinId, {
+            generate_coach_summary: false,
+          });
       showCheckin(completed);
       onSnapshotCompleted(completed);
     } catch (caughtError) {

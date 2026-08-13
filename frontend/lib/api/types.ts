@@ -23,6 +23,10 @@ export type SaveMorningCheckinAnswerRequest = {
   answer: MorningCheckinAnswer;
 };
 
+export type CompleteMorningCheckinRequest = {
+  generate_coach_summary: boolean;
+};
+
 export type PersonalJournalExportResponse = {
   snapshots: MorningCheckinResponse[];
 };

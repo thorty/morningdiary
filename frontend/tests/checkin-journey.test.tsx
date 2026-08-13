@@ -45,6 +45,7 @@ function client(): PersonalJournalApiClient {
     listPersonalJournalSnapshots: async () =>
       checkin.status === "completed" ? [checkin] : [],
     exportPersonalJournal: async () => ({ snapshots: [] }),
+    deletePersonalJournal: async () => undefined,
   };
 }
 

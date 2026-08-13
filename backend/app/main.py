@@ -21,7 +21,12 @@ from app.db import (
     MorningCheckinNotFoundError,
     PersonalJournalStore,
 )
-from app.models import HealthResponse, MorningCheckinResponse, SaveMorningCheckinAnswerRequest
+from app.models import (
+    CompleteMorningCheckinRequest,
+    HealthResponse,
+    MorningCheckinResponse,
+    SaveMorningCheckinAnswerRequest,
+)
 
 
 BACKEND_LOGGER_NAME = "morningcoach.backend"
@@ -146,7 +151,10 @@ def create_app(
         return MorningCheckinResponse(**checkin)
 
     @app.post("/api/morning-checkin/{checkin_id}/complete", response_model=MorningCheckinResponse)
-    def complete_morning_checkin(checkin_id: str) -> MorningCheckinResponse:
+    def complete_morning_checkin(
+        checkin_id: str,
+        payload: CompleteMorningCheckinRequest | None = None,
+    ) -> MorningCheckinResponse:
         _log_info(
             logger,
             "morning_checkin_completion_requested",
@@ -199,7 +207,8 @@ def create_app(
             browser_date=checkin["browser_date"].isoformat(),
         )
 
-        if has_any_answer and (
+        generate_coach_summary = payload is None or payload.generate_coach_summary
+        if generate_coach_summary and has_any_answer and (
             checkin["coach_summary"] is None
             or checkin["coach_summary_status"] == "unavailable"
         ):
@@ -299,6 +308,10 @@ def create_app(
     def list_personal_journal_snapshots() -> list[MorningCheckinResponse]:
         snapshots = store.list_completed_snapshots_newest_first()
         return [MorningCheckinResponse(**snapshot) for snapshot in snapshots]
+
+    @app.delete("/api/personal-journal", status_code=204)
+    def delete_personal_journal() -> None:
+        store.delete_all_checkins()
 
     @app.get("/api/personal-journal/export")
     def export_personal_journal() -> JSONResponse:
