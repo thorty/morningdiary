@@ -5,7 +5,7 @@ A personal web journal for completing one guided gratitude routine each morning 
 ## Language
 
 **Morning Check-in**:
-The guided six-question routine a person completes for the browser-local calendar day. Each submitted response is saved; at most one Morning Check-in can be completed per day, while an unfinished one automatically resumes or may be restarted.
+The guided six-question routine a person completes for the browser-local calendar day. The six fixed questions cover: Ankommen (mood 1–5), Dankbarkeit, Loslassen, Energie, Ein guter Tag, and Absicht. Each submitted response is saved; at most one Morning Check-in can be completed per day, while an unfinished one automatically resumes or may be restarted.
 _Avoid_: Session, interview, flow
 
 **Daily Snapshot**:
@@ -17,8 +17,12 @@ The single collection of Daily Snapshots held by this application. It has no use
 _Avoid_: Account, user journal, profile
 
 **Coach Summary**:
-An optional, supportive, non-clinical reflection attached to a Daily Snapshot. It follows the predominant language of the check-in answers, defaulting to German when they are mixed; it is grounded only in those answers and never diagnoses, gives treatment advice, or invents facts. A Daily Snapshot remains complete when a Coach Summary cannot be generated.
+An optional, supportive, non-clinical reflection attached to a Daily Snapshot. It follows the predominant language of the check-in answers, defaulting to German when they are mixed; it is grounded only in those answers and never diagnoses, gives treatment advice, or invents facts. A Daily Snapshot remains complete when a Coach Summary cannot be generated. When the user opts out at completion time, the status is `not_requested` and no generation is attempted.
 _Avoid_: Required summary, completion result
+
+**Coach Summary Retry**:
+When Coach Summary generation fails (generator not configured or exception), the status is `unavailable` and a retry is offered on the next completion request — provided a generator is configured and the check-in has at least one answer. No retry is offered for a Blank Check-in or when generation already succeeded.
+_Avoid_: Automatic retry, background retry
 
 **Coach Summary Generator**:
 The replaceable server-side boundary that turns Morning Check-in responses into a Coach Summary or no summary. Its initial implementation uses OpenAI without exposing the API key to the browser and receives only the current check-in answers.
