@@ -122,7 +122,7 @@ test("question cards show progress and preserve saved answers while navigating b
   expect(screen.getByRole("heading", { name: "Frage 2 von 6", level: 3 })).toBeInTheDocument();
   expect(progress.children[0]).toHaveClass("completed");
   expect(progress.children[1]).toHaveClass("current");
-  expect(screen.getByLabelText("Optionale Freitext-Antwort")).toHaveValue("Schon notiert");
+  expect(screen.getByLabelText("Freitext-Antwort")).toHaveValue("Schon notiert");
   fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
 
   await waitFor(() => {

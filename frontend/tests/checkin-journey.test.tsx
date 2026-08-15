@@ -62,7 +62,7 @@ test("takes a person from the start page through a Morning Check-in into their P
 
   for (let question = 1; question <= 6; question += 1) {
     if (question === 1) fireEvent.click(screen.getByRole("radio", { name: "4 Gut" }));
-    else fireEvent.change(screen.getByLabelText("Optionale Freitext-Antwort"), { target: { value: `Antwort ${question}` } });
+    else fireEvent.change(screen.getByLabelText("Freitext-Antwort"), { target: { value: `Antwort ${question}` } });
     fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
     if (question < 6) await screen.findByRole("heading", { name: `Frage ${question + 1} von 6`, level: 3 });
   }

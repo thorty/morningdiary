@@ -400,7 +400,7 @@ test("saves an optional free-text answer before advancing", async () => {
       screen.getByRole("heading", { name: "Frage 2 von 6", level: 3 }),
     ).toBeInTheDocument();
   });
-  fireEvent.change(screen.getByLabelText("Optionale Freitext-Antwort"), {
+  fireEvent.change(screen.getByLabelText("Freitext-Antwort"), {
     target: { value: "Ein ruhiger Kaffee" },
   });
   fireEvent.click(
@@ -1107,7 +1107,7 @@ test("renders generated coach summary after completing final answer", async () =
         }),
       ).toBeInTheDocument();
     });
-    fireEvent.change(screen.getByLabelText("Optionale Freitext-Antwort"), {
+    fireEvent.change(screen.getByLabelText("Freitext-Antwort"), {
       target: { value: `Antwort ${index + 2}` },
     });
     fireEvent.click(screen.getByRole("button", { name: /Antwort speichern/ }));

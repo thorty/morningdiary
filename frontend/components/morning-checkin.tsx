@@ -295,7 +295,7 @@ export function MorningCheckin({
           <div className="breathing-card" aria-live="polite">
             <h3>Breathing Exercise</h3>
             <BreathingAnimation />
-            {/* <p className="breathing-cue">{currentBreathingCue.label}</p>            
+            <p className="breathing-cue">{currentBreathingCue.label}</p>
             <p className="breathing-detail">{currentBreathingCue.detail}</p>
             <p className="breathing-countdown">
               {secondsRemaining} Sekunden verbleibend
@@ -304,7 +304,7 @@ export function MorningCheckin({
               aria-label="Fortschritt der Breathing Exercise"
               value={breathingDurationSeconds - secondsRemaining}
               max={breathingDurationSeconds}
-            /> */}
+            />
             <button
               type="button"
               onClick={finishBreathing}
@@ -384,10 +384,8 @@ export function MorningCheckin({
                       </fieldset>
                     ) : (
                       <>
-                        <label htmlFor="question-input">
-                          Optionale Freitext-Antwort
-                        </label>
                         <textarea
+                          aria-label="Freitext-Antwort"
                           id="question-input"
                           name="question-input"
                           onChange={(event) =>
