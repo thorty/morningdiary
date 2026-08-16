@@ -45,7 +45,7 @@ vi.mock("@/lib/api/default-client", () => ({
   defaultPersonalJournalApiClient: client,
 }));
 
-import Page from "@/app/page";
+import { HomePage } from "@/components/home-page";
 
 beforeEach(() => {
   client.getOrCreateMorningCheckin.mockResolvedValue({
@@ -60,7 +60,7 @@ beforeEach(() => {
 });
 
 test("the home route presents the daytime greeting, introduction, and routine", async () => {
-  render(<Page />);
+  render(<HomePage />);
 
   expect(
     screen.getByRole("heading", {
@@ -103,7 +103,7 @@ test("the home route resumes an unfinished Morning Check-in and limits the previ
     })),
   );
 
-  render(<Page />);
+  render(<HomePage />);
 
   expect(
     await screen.findByRole("link", { name: "Morning Check-in fortsetzen" }),
@@ -127,7 +127,7 @@ test("the home route marks today's completed Morning Check-in without hiding jou
   });
   client.listPersonalJournalSnapshots.mockRejectedValue(new Error("unavailable"));
 
-  render(<Page />);
+  render(<HomePage />);
 
   expect(
     await screen.findByRole("status", {
@@ -155,7 +155,7 @@ test("the home route keeps the journal preview available when today's status can
     },
   ]);
 
-  render(<Page />);
+  render(<HomePage />);
 
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Der heutige Status konnte nicht geladen werden.",
@@ -171,7 +171,7 @@ test("the home route distinguishes a loading journal preview from an empty one",
     () => new Promise((resolve) => { resolveSnapshots = resolve; }),
   );
 
-  render(<Page />);
+  render(<HomePage />);
 
   expect(screen.getByText("Journal wird geladen...")).toBeInTheDocument();
   expect(screen.queryByText("Noch keine Daily Snapshots vorhanden.")).not.toBeInTheDocument();

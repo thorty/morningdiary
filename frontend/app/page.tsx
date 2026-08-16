@@ -1,6 +1,6 @@
 import React from "react";
 
-import { HomePage } from "@/components/home-page";
+import { RootPage } from "@/components/app-entry";
 
 export const metadata = {
   title: "Startseite",
@@ -8,5 +8,5 @@ export const metadata = {
 };
 
 export default function Page() {
-  return <HomePage />;
+  return <RootPage />;
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AppAccessProvider } from "@/components/app-entry";
 import { ThemeApplier } from "@/components/theme-applier";
 import "./globals.css";
 
@@ -12,7 +13,7 @@ type RootLayoutProps = Readonly<{ children: React.ReactNode }>;
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="de" suppressHydrationWarning>
-      <body><ThemeApplier />{children}</body>
+      <body><ThemeApplier /><AppAccessProvider>{children}</AppAccessProvider></body>
     </html>
   );
 }
