@@ -12,4 +12,13 @@ The Personal Journal is stored in the frontend's browser-local `localStorage`. T
 - Run typecheck: `uv run mypy`
 - Run tests: `uv run pytest`
 
-`OPENAI_API_KEY` is loaded only by the backend environment and is never sent to the browser. Coach Summary requests contain only the current answers and target language; failures are returned as controlled unavailable results so local journal completion does not depend on OpenAI.
+`OPENAI_API_KEY` is loaded only by the backend environment and is never sent to the browser. `POST /api/coach-summary` accepts only the six current answers and target language:
+
+```json
+{
+  "answers": [4, "Dankbar fuer den ruhigen Morgen", null, null, null, "Den naechsten Schritt"],
+  "target_language": "de"
+}
+```
+
+It returns `{"status":"available","summary":"..."}` on success or `{"status":"unavailable","summary":null}` when generation is not configured or fails. The latter is a successful HTTP response so the frontend can keep the Daily Snapshot complete.

@@ -20,7 +20,6 @@ def _openai_api_key() -> str | None:
 
 
 class Settings(BaseModel):
-    tinydb_path: Path = Field(default=Path("./data/personal-journal.json"))
     openai_api_key: str | None = Field(default_factory=_openai_api_key)
     cors_allow_origins: list[str] = Field(
         default_factory=lambda: [

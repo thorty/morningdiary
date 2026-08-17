@@ -2,6 +2,23 @@ export type HealthResponse = {
   status: "ok";
 };
 
+export type CoachSummaryRequest = {
+  answers: [
+    MorningCheckinAnswer,
+    MorningCheckinAnswer,
+    MorningCheckinAnswer,
+    MorningCheckinAnswer,
+    MorningCheckinAnswer,
+    MorningCheckinAnswer,
+  ];
+  target_language: "de" | "en";
+};
+
+export type CoachSummaryResponse = {
+  status: "available" | "unavailable";
+  summary: string | null;
+};
+
 export type MorningCheckinStatus = "unfinished" | "completed";
 
 export type MorningCheckinAnswer = number | string | null;

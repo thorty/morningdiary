@@ -7,7 +7,6 @@ dependencies = [
   "fastapi>=0.116.1",
   "openai>=1.99.9",
   "python-dotenv>=1.1.1",
-  "tinydb>=4.8.2",
   "uvicorn[standard]>=0.35.0",
 ]
 
@@ -26,7 +25,3 @@ python_version = "3.12"
 strict = true
 warn_unreachable = true
 files = ["app", "tests"]
-
-[[tool.mypy.overrides]]
-module = ["tinydb", "tinydb.*"]
-ignore_missing_imports = true

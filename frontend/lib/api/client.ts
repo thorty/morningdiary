@@ -1,5 +1,7 @@
 import type {
   HealthResponse,
+  CoachSummaryRequest,
+  CoachSummaryResponse,
   PersonalJournalExportResponse,
   CompleteMorningCheckinRequest,
   MorningCheckinResponse,
@@ -17,10 +19,21 @@ export interface PersonalJournalApiClient {
   deletePersonalJournal(): Promise<void>;
 }
 
+export interface CoachSummaryApiClient {
+  createCoachSummary(payload: CoachSummaryRequest): Promise<CoachSummaryResponse>;
+}
+
 type HttpClientOptions = {
   baseUrl?: string;
   fetchImpl?: typeof fetch;
 };
+
+function resolveHttpClientOptions(options: HttpClientOptions): { baseUrl: string; fetchImpl: typeof fetch } {
+  return {
+    baseUrl: options.baseUrl ?? process.env.NEXT_PUBLIC_BACKEND_BASE_URL ?? "http://localhost:8000",
+    fetchImpl: options.fetchImpl ?? fetch,
+  };
+}
 
 async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
@@ -49,8 +62,7 @@ async function parseJson<T>(response: Response): Promise<T> {
 export function createHttpPersonalJournalApiClient(
   options: HttpClientOptions = {},
 ): PersonalJournalApiClient {
-  const baseUrl = options.baseUrl ?? process.env.NEXT_PUBLIC_BACKEND_BASE_URL ?? "http://localhost:8000";
-  const fetchImpl = options.fetchImpl ?? fetch;
+  const { baseUrl, fetchImpl } = resolveHttpClientOptions(options);
 
   return {
     async getHealth() {
@@ -105,6 +117,28 @@ export function createHttpPersonalJournalApiClient(
         method: "DELETE",
       });
       if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+    },
+  };
+}
+
+export function createHttpCoachSummaryApiClient(
+  options: HttpClientOptions = {},
+): CoachSummaryApiClient {
+  const { baseUrl, fetchImpl } = resolveHttpClientOptions(options);
+
+  return {
+    async createCoachSummary(payload) {
+      const response = await fetchImpl(`${baseUrl}/api/coach-summary`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          answers: payload.answers,
+          target_language: payload.target_language,
+        }),
+      });
+      return parseJson<CoachSummaryResponse>(response);
     },
   };
 }
