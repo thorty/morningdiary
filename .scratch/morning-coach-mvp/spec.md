@@ -8,9 +8,9 @@ I want a private, lightweight web application that guides me through one gratitu
 
 ## Solution
 
-Build a self-hosted, private-network-only application with a Next.js frontend and FastAPI backend. The app starts with a skippable 30-second Breathing Exercise, then presents six fixed German questions one at a time. It saves responses as they are submitted, resumes an unfinished Morning Check-in on the same browser-local date, and produces one immutable Daily Snapshot per completed day.
+Build a self-hosted, private-network-only application with a Next.js frontend and stateless FastAPI backend. The app starts with a skippable 30-second Breathing Exercise, then presents six fixed German questions one at a time. The browser-local Personal Journal Store saves responses as they are submitted, resumes an unfinished Morning Check-in on the same browser-local date, and produces one immutable Daily Snapshot per completed day.
 
-FastAPI owns TinyDB persistence and a replaceable Coach Summary Generator. The initial generator uses OpenAI with a backend-only API key, receives only the current check-in answers, and produces a short supportive, non-clinical reflection. The Personal Journal shows snapshots newest first and can be downloaded as a complete JSON Journal Export.
+The browser owns Personal Journal persistence through `localStorage`. FastAPI provides Health Check and a replaceable stateless Coach Summary Generator. The initial generator uses OpenAI with a backend-only API key, receives only the current check-in answers and target language, and produces a short supportive, non-clinical reflection. The Personal Journal shows snapshots newest first and can be downloaded as a complete JSON Journal Export.
 
 ## User Stories
 
@@ -40,16 +40,16 @@ FastAPI owns TinyDB persistence and a replaceable Coach Summary Generator. The i
 24. As the journal owner, I want a completed Daily Snapshot to be immutable, so that my history remains an accurate record.
 25. As the journal owner, I want to see my Personal Journal ordered newest first, so that recent reflections are easiest to find.
 26. As the journal owner, I want to download a lossless JSON Journal Export containing all Daily Snapshots, answers, and any Coach Summaries, so that I can back up my data.
-27. As the journal owner, I want the frontend to call the backend for persistence and summaries, so that my TinyDB file and OpenAI API key are never exposed to the browser.
+27. As the journal owner, I want the frontend to keep journal persistence in this browser and call the backend only for optional summaries, so that no server journal database or OpenAI API key is exposed to the browser.
 
 ## Implementation Decisions
 
 - The application is a single-user Personal Journal with no accounts, authentication, `user_id`, or user selection.
-- The application is self-hosted on a machine with persistent local storage and is reachable only through a LAN or private VPN. It must not be directly exposed to the public internet without an authentication design.
+- The application is self-hosted and reachable only through a LAN or private VPN. The Personal Journal requires no persistent server volume; the stateless backend still must not be directly exposed to the public internet without an authentication design.
 - The frontend is a Next.js TypeScript application. The backend is a FastAPI Python application communicating with the frontend through REST.
 - The Python backend uses `uv` as its required package manager for dependency installation, locking, test execution, and local service commands.
-- FastAPI exclusively owns persistence in TinyDB and is the only layer allowed to invoke the Coach Summary Generator. The browser must never read the database directly or receive `OPENAI_API_KEY`.
-- The browser provides its local calendar date when retrieving or creating the day’s Morning Check-in. The backend enforces at most one completed Daily Snapshot for that date and permits one unfinished check-in to resume or restart.
+- `localStorage` exclusively owns Personal Journal persistence in the production frontend through the Personal Journal Store. The browser provides its local calendar date when retrieving or creating the day’s Morning Check-in, enforces at most one completed Daily Snapshot for that date, and permits one unfinished check-in to resume or restart.
+- FastAPI is stateless and is the only layer allowed to invoke the Coach Summary Generator. It receives only current answers and target language; it never receives journal history or browser identity, and it never exposes `OPENAI_API_KEY`.
 - A Morning Check-in has six fixed German questions. The first accepts an optional integer mood rating from 1 through 5. Each remaining question accepts one optional free-text value. The question set is deterministic and does not adapt to responses.
 - Submitted responses are persisted incrementally. Restarting an unfinished Morning Check-in clears its stored responses; it cannot change a completed Daily Snapshot.
 - Completion persists the Daily Snapshot before or independently of Coach Summary generation, so that LLM failures cannot prevent completion.
@@ -60,14 +60,14 @@ FastAPI owns TinyDB persistence and a replaceable Coach Summary Generator. The i
 - Determine Coach Summary language from the predominant answer language; use German for mixed answers. The frontend interface and questions remain German.
 - When generation returns no summary or fails, the Daily Snapshot displays `Deine Zusammenfassung konnte heute nicht erstellt werden.` without technical details or a retry control.
 - The Breathing Exercise is a client-side visual timer only. It lasts 30 seconds, uses the fixed German four-seconds-in/six-seconds-out cue, may be skipped, and is not persisted.
-- The history endpoint returns retained Daily Snapshots newest first. The export endpoint returns a downloadable, lossless JSON representation of the entire Personal Journal.
-- Public API behavior must cover retrieving or starting the daily check-in, saving/restarting answers, completing it, retrieving history, and downloading the Journal Export. Exact URI and payload shapes may be finalized during implementation as long as these boundaries hold.
+- The Personal Journal Store lists retained Daily Snapshots newest first and creates a downloadable, lossless JSON representation of the entire Personal Journal. The backend API is limited to Health Check and stateless Coach Summary generation.
+- Existing TinyDB files require a one-time developer migration before upgrade; there is no product import UI or public migration endpoint.
 
 ## Testing Decisions
 
 - Test externally observable behavior rather than internal implementation details.
-- Treat FastAPI’s HTTP API as the primary backend seam. Use a temporary TinyDB database and a fake Coach Summary Generator so tests are deterministic and never call OpenAI.
-- Backend tests must cover daily uniqueness, browser-supplied date handling, response autosave and resume, restart behavior, valid blank completion, completed snapshot immutability, successful summary attachment, summary failure completion, no generator call for a Blank Check-in, newest-first history, and lossless JSON export.
+- Treat the Personal Journal Store and stateless Coach Summary HTTP API as the primary seams. Use an in-memory/browser-storage store and a fake Coach Summary Generator so tests are deterministic and never call OpenAI.
+- Store tests must cover daily uniqueness, browser-supplied date handling, response autosave and resume, restart behavior, valid blank completion, completed snapshot immutability, newest-first history, and lossless JSON export. Backend tests cover only the stateless Health Check and Coach Summary contract.
 - Validate API input at the seam, including the 1-5 mood range and malformed or unknown check-in state, with meaningful client-visible failures.
 - Frontend tests should use mocked API responses to verify the visible Breathing Exercise finish/skip transition, one-question progression, optional responses, resumed state, completed snapshot rendering, missing-summary note, history ordering display, and export action.
 - The repository has no implementation or test prior art. Select lightweight standard tooling appropriate to the chosen Next.js and FastAPI scaffolds; do not introduce OpenAI-dependent automated tests.
@@ -76,7 +76,7 @@ FastAPI owns TinyDB persistence and a replaceable Coach Summary Generator. The i
 
 - Authentication, accounts, multi-user access, or public internet exposure.
 - Reminders, email, push notifications, Home Assistant webhooks, and other integrations.
-- Editing or deleting completed Daily Snapshots.
+- Editing or deleting individual completed Daily Snapshots. Whole-Personal-Journal deletion remains a local product operation.
 - Analytics, mood trends, insights across history, or sending history to the LLM.
 - Adaptive or follow-up questions based on answers or mood.
 - Audio-guided meditation, configurable breathing patterns, and persistence of the Breathing Exercise.
@@ -86,4 +86,4 @@ FastAPI owns TinyDB persistence and a replaceable Coach Summary Generator. The i
 ## Further Notes
 
 - The original architecture draft is in `doc/app.md`; this specification supersedes it where the two differ. In particular, the MVP has no `user_id`, every response is optional, Q2 and Q3 are free text rather than required three-item lists, and a failed LLM summary does not block completion.
-- TinyDB is appropriate only while the self-hosted deployment has reliable persistent local disk and a single writer. Reassess storage if deployment or concurrency requirements change.
+- TinyDB was the historical persistence mechanism. Existing records must be backed up and migrated once before removing that runtime dependency; it is not the source of truth after the browser-local migration.

@@ -46,15 +46,11 @@ Ein geführter „Morning Gratitude Coach“ als Web-App. Statt freiem Chat füh
        - LLM-Zusammenfassung in 2–4 Sätzen.
    - In einer History-Liste aufrufbar („Vergangene Einträge“).
 
-5. **Journal-Speicherung (leichtes NoSQL)**
-   - Jeder Durchlauf wird als Dokument gespeichert:
-     - `date`
-     - `mood_score` (1–5)
-     - `answers` (Map für Q1–Q6)
-     - `summary` (LLM-Text)
-     - `created_at`
-   - Umsetzung mit **TinyDB** (leichtgewichtige, JSON-basierte NoSQL-DB für Python).  
-     Ideal für Prototyp & kleine Projekte, 0 Setup, reine Python-Lib. [web:98][web:100][web:103]
+5. **Journal-Speicherung im Browser**
+   - Das Personal Journal ist browsergebunden und wird im `localStorage` des aktuellen Browser-Profils gespeichert.
+   - Ein versioniertes, namespaced JSON-Dokument enthält laufende Morning Check-ins und abgeschlossene Daily Snapshots. Der Personal Journal Store kapselt Zugriff, Autosave, Resume, Completion, Export und Löschung; UI-Komponenten greifen nicht direkt auf `window.localStorage` zu.
+   - Der Browser-local calendar day bestimmt den Check-in. Pro Tag gibt es höchstens einen abgeschlossenen Daily Snapshot; abgeschlossene Snapshots bleiben unveränderlich.
+   - `localStorage` ist keine Synchronisierung, Verschlüsselung oder Authentifizierung. Ein Wechsel von Browser, Gerät oder Browser-Profil stellt das Journal nicht automatisch bereit.
 
 6. **Später: Integrationen**
    - Optionale Webhooks/Events, z.B.:
@@ -91,17 +87,12 @@ gratitude-morning-coach/
 │   ├── package.json
 │   └── tsconfig.json
 │
-├── backend/                 # FastAPI App, managed with uv
+├── backend/                 # Stateless FastAPI App, managed with uv
 │   ├── app/
 │   │   ├── main.py          # FastAPI entrypoint
-│   │   ├── config.py        # Settings (API Keys, Pfade)
-│   │   ├── models.py        # Pydantic-Modelle (Request/Response)
-│   │   ├── db.py            # TinyDB-Client & Abstraktion
-│   │   ├── routes/
-│   │   │   ├── sessions.py  # /session/start, /session/answer, /session/{id}
-│   │   │   └── journal.py   # /journal (History-Endpunkte)
-│   │   └── services/
-│   │       └── llm.py       # LLM-Call & Prompt-Logik für Summary
+│   │   ├── config.py        # Backend settings and OPENAI_API_KEY
+│   │   ├── models.py        # Coach Summary request/response models
+│   │   └── coach_summary.py # Replaceable server-side generator
 │   ├── pyproject.toml       # Python dependencies managed and locked by uv
 │   ├── uv.lock
 │   └── uvicorn_app.py       # z.B. `uv run uvicorn app.main:app --reload`
@@ -111,7 +102,13 @@ gratitude-morning-coach/
 
 ---
 
-## Beispiel-API-Schema
+## Historisches API-Schema (vor der Browser-Migration)
+
+Die folgenden `/session`- und `/journal`-Beispiele beschreiben die frühere,
+backend-persistierte Architektur. Sie sind keine aktuellen Endpunkte. Das
+heutige Backend ist stateless und bietet nur Health Check und die optionale
+Coach-Summary-Erzeugung; Morning Check-ins, Daily Snapshots, History und
+Journal Export liegen im browser-local Personal Journal Store.
 
 ### 1. `POST /session/start`
 
@@ -222,9 +219,11 @@ Der LLM-Call passiert im Backend, sobald die letzte Frage (q6) beantwortet ist.
 
 ---
 
-## Journal-Speicher mit leichter NoSQL-Datenbank (TinyDB)
+## Historische Architektur: Journal-Speicher mit TinyDB
 
-Für v1 ist **TinyDB** ideal:
+Die folgenden Abschnitte dokumentieren ausschließlich die ursprüngliche Architektur und das Format bestehender Installationen. TinyDB ist **nicht** mehr die laufende Journal-Persistenz. Nach der Umstellung besitzt der Backend-Prozess keine Journal-Datei und keinen Journal-CRUD-Endpunkt mehr; Health Check und stateless Coach Summary bleiben erhalten.
+
+Für die ursprüngliche v1 war **TinyDB** vorgesehen:
 
 - reines Python, keine Server-Installation,
 - speichert als JSON-Datei,
@@ -259,7 +258,7 @@ Für v1 ist **TinyDB** ideal:
 }
 ```
 
-### Zugriff im Backend (FastAPI) – grobe Skizze
+### Zugriff im historischen Backend (FastAPI) – grobe Skizze
 
 ```python
 # backend/app/db.py
@@ -296,19 +295,15 @@ def get_entries(user_id: str | None = None, limit: int = 20, offset: int = 0):
     ...
 ```
 
-TinyDB ist perfekt für diesen Anwendungsfall: kleiner Datensatz, einfache Dokumentstruktur, keine hohen Lastanforderungen, schnell zu integrieren. [web:98][web:100][web:102][web:104]
+TinyDB war für den kleinen Datensatz und die ursprüngliche selbst gehostete Architektur geeignet. Bestehende Dateien werden nicht automatisch importiert. Die einmalige Entwickler-Migration ist in `docs/runbooks/tinydb-to-browser-storage.md` beschrieben.
 
 ---
 
 ## Next Steps
 
-- Frontend-Gerüst mit Next.js anlegen (`frontend/`).
-- FastAPI + TinyDB im `backend/` implementieren; Python-Abhängigkeiten, Lockfile, Tests und lokale Service-Befehle werden mit `uv` verwaltet bzw. ausgeführt.
-- LLM-Call für Summary im `services/llm.py` kapseln.
-- Eine einfache Start-Route, die:
-  - Atemtimer anzeigt,
-  - danach Q1–Q6 step-by-step rendert,
-  - am Ende Summary vom Backend holt und anzeigt.
+- Browser-local Personal Journal Store und lokale Morning-Check-in-Oberflächen implementieren.
+- Das stateless FastAPI-Backend mit `uv` starten; `OPENAI_API_KEY` bleibt ausschließlich in der Backend-Umgebung.
+- Die einmalige Übernahme bestehender TinyDB-Dateien vor dem Upgrade gemäß `docs/runbooks/tinydb-to-browser-storage.md` durchführen.
 
 ```markdown
 ```
