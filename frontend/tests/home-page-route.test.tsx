@@ -93,7 +93,7 @@ test("the home route resumes an unfinished Morning Check-in and limits the previ
     coach_summary: null,
   });
   client.listPersonalJournalSnapshots.mockResolvedValue(
-    ["04", "03", "02", "01"].map((day) => ({
+    ["14", "13", "12", "11"].map((day) => ({
       id: `snapshot-${day}`,
       browser_date: `2026-08-${day}`,
       status: "completed" as const,

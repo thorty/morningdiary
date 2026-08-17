@@ -32,22 +32,22 @@ function apiClient(snapshots: MorningCheckinResponse[] = []): PersonalJournalApi
 
 test("the Personal Journal route shows Daily Snapshots newest first with their mood and preview", async () => {
   const client = apiClient([
-    snapshot("02", "Ältere Notiz", 2),
-    snapshot("04", "Neueste Notiz", 5),
+    snapshot("12", "Ältere Notiz", 2),
+    snapshot("14", "Neueste Notiz", 5),
   ]);
 
   render(<PersonalJournalPage apiClient={client} />);
 
-  await screen.findByRole("article", { name: "Daily Snapshot vom 2026-08-04" });
+  await screen.findByRole("article", { name: "Daily Snapshot vom 2026-08-14" });
   const snapshots = screen.getAllByRole("article");
   expect(snapshots.map((entry) => entry.getAttribute("aria-label"))).toEqual([
-    "Daily Snapshot vom 2026-08-04",
-    "Daily Snapshot vom 2026-08-02",
+    "Daily Snapshot vom 2026-08-14",
+    "Daily Snapshot vom 2026-08-12",
   ]);
   expect(screen.getByText("Stimmung 5 von 5 - Sehr gut")).toBeInTheDocument();
   expect(screen.getByText("Neueste Notiz")).toBeInTheDocument();
   expect(screen.getByRole("img", { name: /Stimmungsverlauf/ })).toHaveAccessibleName(
-    "Stimmungsverlauf: 2 von 5 am 2. August 2026; 5 von 5 am 4. August 2026",
+    "Stimmungsverlauf: 2 von 5 am 12. August 2026; 5 von 5 am 14. August 2026",
   );
 });
 

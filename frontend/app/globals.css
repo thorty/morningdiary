@@ -263,13 +263,17 @@ h3 {
   overflow: visible;
 }
 
-.mood-trend-dates {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 0.35rem;
-  color: var(--muted);
+.mood-trend-y-axis text,
+.mood-trend-x-axis text {
+  fill: var(--muted);
   font-size: 0.75rem;
   font-weight: 700;
+}
+
+.mood-trend-grid line {
+  stroke: var(--line);
+  stroke-dasharray: 3 5;
+  stroke-width: 1;
 }
 
 .journal-entry-list {

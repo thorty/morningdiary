@@ -4,6 +4,15 @@ import React from "react";
 import { MoodTrend } from "@/components/mood-trend";
 import type { MorningCheckinResponse } from "@/lib/api/types";
 
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-08-17T12:00:00"));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 function snapshot(day: string, mood: number | null): MorningCheckinResponse {
   return {
     id: `snapshot-${day}`,
@@ -25,20 +34,35 @@ test("shows no trend until two snapshots have a valid mood", () => {
   expect(screen.queryByRole("img", { name: /Stimmungsverlauf/ })).not.toBeInTheDocument();
 });
 
-test("uses the ten most recent valid moods in chronological order with an accessible description", () => {
+test("shows all five Mood Scale emojis on the y-axis", () => {
+  render(<MoodTrend snapshots={[snapshot("10", 1), snapshot("11", 5)]} />);
+
+  expect(screen.getByText("😞")).toBeInTheDocument();
+  expect(screen.getByText("😐")).toBeInTheDocument();
+  expect(screen.getByText("🙂")).toBeInTheDocument();
+  expect(screen.getByText("😊")).toBeInTheDocument();
+  expect(screen.getByText("😄")).toBeInTheDocument();
+});
+
+test("excludes snapshots older than the 14-day calendar window", () => {
+  render(<MoodTrend snapshots={[snapshot("01", 1), snapshot("10", 2), snapshot("16", 4), snapshot("17", 5)]} />);
+
+  expect(screen.getByRole("img", { name: /Stimmungsverlauf/ })).toBeInTheDocument();
+  expect(screen.getAllByTestId("mood-trend-point")).toHaveLength(3);
+  expect(screen.queryByText("1. Aug.")).not.toBeInTheDocument();
+});
+
+test("renders nothing when only one valid mood remains in the window", () => {
+  render(<MoodTrend snapshots={[snapshot("01", 1), snapshot("17", 4)]} />);
+
+  expect(screen.queryByRole("img", { name: /Stimmungsverlauf/ })).not.toBeInTheDocument();
+});
+
+test("plots multiple valid moods in chronological order with an accessible description", () => {
   const snapshots = [
-    snapshot("01", 1),
-    snapshot("02", 2),
-    snapshot("03", 3),
-    snapshot("04", 4),
-    snapshot("05", 5),
-    snapshot("06", 1),
-    snapshot("07", 2),
-    snapshot("08", 3),
-    snapshot("09", 4),
-    snapshot("10", 5),
-    snapshot("11", 1),
-    snapshot("12", 2),
+    snapshot("17", 2),
+    snapshot("10", 1),
+    snapshot("12", 5),
     snapshot("13", null),
   ].reverse();
 
@@ -46,9 +70,9 @@ test("uses the ten most recent valid moods in chronological order with an access
 
   const chart = screen.getByRole("img", { name: /Stimmungsverlauf/ });
   expect(chart).toHaveAccessibleName(
-    "Stimmungsverlauf: 3 von 5 am 3. August 2026; 4 von 5 am 4. August 2026; 5 von 5 am 5. August 2026; 1 von 5 am 6. August 2026; 2 von 5 am 7. August 2026; 3 von 5 am 8. August 2026; 4 von 5 am 9. August 2026; 5 von 5 am 10. August 2026; 1 von 5 am 11. August 2026; 2 von 5 am 12. August 2026",
+    "Stimmungsverlauf: 1 von 5 am 10. August 2026; 5 von 5 am 12. August 2026; 2 von 5 am 17. August 2026",
   );
-  expect(screen.getByText("3. Aug.")).toBeInTheDocument();
-  expect(screen.getByText("12. Aug.")).toBeInTheDocument();
-  expect(screen.queryByText("1. Aug.")).not.toBeInTheDocument();
+  expect(screen.getAllByTestId("mood-trend-point")).toHaveLength(3);
+  expect(screen.getByText("10. Aug.")).toBeInTheDocument();
+  expect(screen.getByText("17. Aug.")).toBeInTheDocument();
 });
