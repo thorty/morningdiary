@@ -110,7 +110,7 @@ textarea:focus-visible {
 .theme-options button[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 25%, transparent); }
 .theme-options button:hover { transform: translateY(-1px); }
 .theme-option span { display: inline-block; width: 0.55rem; height: 0.55rem; margin-right: 0.3rem; border-radius: 50%; background: var(--primary); }
-.theme-option-blue span { background: #447bb8; }.theme-option-purple span { background: #8056a6; }.theme-option-green span { background: #4d8a6d; }
+.theme-option-orange span { background: #b95d3c; }.theme-option-blue span { background: #447bb8; }.theme-option-purple span { background: #8056a6; }.theme-option-green span { background: #4d8a6d; }
 
 .page-nav a,
 .journal-heading a,

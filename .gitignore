@@ -1,0 +1,6 @@
+# .gitignore
+.scratch/
+.DS_Store
+.opencode/
+.pytest_cache/
+.agents/
