@@ -93,6 +93,44 @@ test("an incorrect PIN reports an inline error and clears the input", async () =
   expect(pinInput).toHaveValue("");
 });
 
+test("PIN Reset shows the stored Security Challenge question", async () => {
+  render(<RootPage profileStore={makeStore(profile)} />);
+
+  fireEvent.click(await screen.findByRole("button", { name: "PIN zurücksetzen" }));
+
+  expect(screen.getByRole("heading", { name: "PIN zurücksetzen" })).toBeInTheDocument();
+  expect(screen.getByText(profile.securityChallengeQuestion)).toBeInTheDocument();
+  expect(screen.getByLabelText("Antwort")).toBeInTheDocument();
+});
+
+test("an incorrect Security Challenge answer reports an error and clears the input", async () => {
+  render(<RootPage profileStore={makeStore(profile)} />);
+
+  fireEvent.click(await screen.findByRole("button", { name: "PIN zurücksetzen" }));
+  const answerInput = screen.getByLabelText("Antwort");
+  fireEvent.change(answerInput, { target: { value: "Keks" } });
+  fireEvent.click(screen.getByRole("button", { name: "Antwort prüfen" }));
+
+  expect(screen.getByRole("alert")).toHaveTextContent("Die Antwort ist nicht korrekt. Bitte versuche es erneut.");
+  expect(answerInput).toHaveValue("");
+});
+
+test("a correct Security Challenge answer accepts a new PIN and preserves the rest of the profile", async () => {
+  const store = makeStore(profile);
+  render(<RootPage profileStore={store} />);
+
+  fireEvent.click(await screen.findByRole("button", { name: "PIN zurücksetzen" }));
+  fireEvent.change(screen.getByLabelText("Antwort"), { target: { value: "fLoCkE" } });
+  fireEvent.click(screen.getByRole("button", { name: "Antwort prüfen" }));
+
+  const newPinInput = await screen.findByLabelText("Neue PIN");
+  fireEvent.change(newPinInput, { target: { value: "5678" } });
+  fireEvent.click(screen.getByRole("button", { name: "PIN speichern" }));
+
+  expect(store.save).toHaveBeenCalledWith({ ...profile, pin: "5678" });
+  expect(await screen.findByRole("heading", { name: /Guten (Morgen|Tag|Abend)\./ })).toBeInTheDocument();
+});
+
 test("the shared access gate hides protected route content until a profile is active", async () => {
   render(
     <AppAccessProvider profileStore={makeStore(profile)}>

@@ -37,7 +37,19 @@ export function AppAccessProvider({ profileStore = localStorageUserProfileStore,
     }} />;
   }
 
-  if (!hasActiveSession) return <LockScreen profile={profile} onUnlock={() => setHasActiveSession(true)} />;
+  if (!hasActiveSession) {
+    return (
+      <LockScreen
+        profile={profile}
+        onUnlock={() => setHasActiveSession(true)}
+        onPinReset={(updatedProfile) => {
+          profileStore.save(updatedProfile);
+          setProfile(updatedProfile);
+          setHasActiveSession(true);
+        }}
+      />
+    );
+  }
 
   return <accessContext.Provider value={{ logout: () => setHasActiveSession(false) }}>{children}</accessContext.Provider>;
 }
@@ -54,9 +66,18 @@ export function useAppAccess(): AppAccess {
   return access ?? { logout: () => undefined };
 }
 
-function LockScreen({ profile, onUnlock }: { profile: UserProfile; onUnlock: () => void }) {
+function LockScreen({
+  profile,
+  onUnlock,
+  onPinReset,
+}: {
+  profile: UserProfile;
+  onUnlock: () => void;
+  onPinReset: (profile: UserProfile) => void;
+}) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isResettingPin, setIsResettingPin] = useState(false);
 
   function unlock(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,10 +102,63 @@ function LockScreen({ profile, onUnlock }: { profile: UserProfile; onUnlock: () 
             {error ? <p className="status" role="alert">{error}</p> : null}
             <button className="primary-action entry-action" type="submit">Entsperren</button>
           </form>
-          <button className="secondary-action" type="button">PIN zurücksetzen</button>
+          <button className="secondary-action" onClick={() => setIsResettingPin(true)} type="button">PIN zurücksetzen</button>
+          {isResettingPin ? <PinReset profile={profile} onComplete={onPinReset} /> : null}
         </section>
       </div>
     </main>
+  );
+}
+
+function PinReset({
+  profile,
+  onComplete,
+}: {
+  profile: UserProfile;
+  onComplete: (profile: UserProfile) => void;
+}) {
+  const [step, setStep] = useState<"challenge" | "new-pin">("challenge");
+  const [answer, setAnswer] = useState("");
+  const [newPin, setNewPin] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  function verifyAnswer(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (answer.trim().toLocaleLowerCase() !== profile.securityChallengeAnswer.trim().toLocaleLowerCase()) {
+      setAnswer("");
+      setError("Die Antwort ist nicht korrekt. Bitte versuche es erneut.");
+      return;
+    }
+    setError(null);
+    setStep("new-pin");
+  }
+
+  function saveNewPin(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const updatedProfile = { ...profile, pin: newPin.trim() };
+    onComplete(updatedProfile);
+  }
+
+  return (
+    <div className="entry-card" aria-labelledby="pin-reset-title">
+      {step === "challenge" ? (
+        <form onSubmit={verifyAnswer}>
+          <h2 className="entry-heading" id="pin-reset-title">PIN zurücksetzen</h2>
+          <p className="lead">{profile.securityChallengeQuestion}</p>
+          <label className="entry-label" htmlFor="reset-answer">Antwort</label>
+          <input autoFocus className="entry-input" id="reset-answer" onChange={(event) => setAnswer(event.target.value)} value={answer} />
+          {error ? <p className="status" role="alert">{error}</p> : null}
+          <button className="primary-action entry-action" type="submit">Antwort prüfen</button>
+        </form>
+      ) : (
+        <form onSubmit={saveNewPin}>
+          <h2 className="entry-heading" id="pin-reset-title">Neue PIN festlegen</h2>
+          <label className="entry-label" htmlFor="new-pin">Neue PIN</label>
+          <input autoFocus className="entry-input" id="new-pin" inputMode="numeric" onChange={(event) => setNewPin(event.target.value)} type="password" value={newPin} />
+          <button className="primary-action entry-action" type="submit">PIN speichern</button>
+        </form>
+      )}
+    </div>
   );
 }
 
