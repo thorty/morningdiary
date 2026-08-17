@@ -17,6 +17,7 @@ export function ConfigurationMenu({
   const [isOpen, setIsOpen] = useState(false);
   const [coachSummaryEnabled, setCoachSummaryEnabled] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => setCoachSummaryEnabled(loadCoachSummaryEnabled()), []);
 
@@ -28,10 +29,13 @@ export function ConfigurationMenu({
   async function deleteJournal(): Promise<void> {
     if (!window.confirm("Wirklich alle Daily Snapshots und angefangenen Check-ins löschen?")) return;
     setIsDeleting(true);
+    setDeleteError(null);
     try {
       await apiClient.deletePersonalJournal();
       onJournalDeleted();
       setIsOpen(false);
+    } catch (caughtError) {
+      setDeleteError(caughtError instanceof Error ? caughtError.message : "Das Personal Journal konnte nicht gelöscht werden.");
     } finally {
       setIsDeleting(false);
     }
@@ -55,6 +59,7 @@ export function ConfigurationMenu({
           <button className="configuration-delete" disabled={isDeleting} onClick={() => void deleteJournal()} type="button">
             {isDeleting ? "Historie wird gelöscht..." : "Historie löschen"}
           </button>
+          {deleteError ? <p className="status" role="alert">{deleteError}</p> : null}
           <button className="configuration-logout" onClick={logout} type="button">Abmelden</button>
         </div>
       ) : null}

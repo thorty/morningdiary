@@ -12,6 +12,7 @@ import type { PersonalJournalApiClient } from "@/lib/api/client";
 import { defaultPersonalJournalApiClient } from "@/lib/api/default-client";
 import { resolveAutomaticTheme } from "@/lib/theme";
 import type { MorningCheckinResponse } from "@/lib/api/types";
+import { PersonalJournalStoreError } from "@/lib/personal-journal-store";
 
 function browserDate(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -42,7 +43,7 @@ export function HomePage({ apiClient = defaultPersonalJournalApiClient, todayDat
     const todayKey = browserDate(today);
     void apiClient.getOrCreateMorningCheckin(todayKey).then(
       setCheckin,
-      () => setCheckinError("Der heutige Status konnte nicht geladen werden."),
+      (caughtError) => setCheckinError(caughtError instanceof PersonalJournalStoreError ? caughtError.message : "Der heutige Status konnte nicht geladen werden."),
     );
   }, [apiClient, today]);
 
@@ -50,7 +51,7 @@ export function HomePage({ apiClient = defaultPersonalJournalApiClient, todayDat
     if (!today) return;
     void apiClient.listPersonalJournalSnapshots().then(
       setSnapshots,
-      () => setJournalError("Die Personal Journal Einträge konnten nicht geladen werden."),
+      (caughtError) => setJournalError(caughtError instanceof PersonalJournalStoreError ? caughtError.message : "Die Personal Journal Einträge konnten nicht geladen werden."),
     ).finally(() => setIsJournalLoading(false));
   }, [apiClient, today]);
 
@@ -58,7 +59,14 @@ export function HomePage({ apiClient = defaultPersonalJournalApiClient, todayDat
   const action = checkin?.next_question_number && checkin.next_question_number > 1 ? "Morning Check-in fortsetzen" : "Check-in starten";
 
   async function retryCoachSummary(snapshot: MorningCheckinResponse) {
-    setCheckin(await apiClient.completeMorningCheckin(snapshot.id));
+    try {
+      const updated = await apiClient.completeMorningCheckin(snapshot.id);
+      setCheckin(updated);
+      setSnapshots((currentSnapshots) => currentSnapshots.map((current) => current.id === updated.id ? updated : current));
+      setCheckinError(null);
+    } catch (caughtError) {
+      setCheckinError(caughtError instanceof PersonalJournalStoreError ? caughtError.message : "Die Coach Summary konnte gerade nicht erneut erstellt werden.");
+    }
   }
 
   function handleJournalDeleted() {

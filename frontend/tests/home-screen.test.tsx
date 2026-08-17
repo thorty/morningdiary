@@ -87,7 +87,7 @@ test("shows German base shell and privacy boundary", async () => {
 
   await waitFor(() => {
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Journal-Service bereit.",
+      "Personal Journal bereit.",
     );
   });
 });
@@ -303,7 +303,7 @@ test("shows degraded status when backend health request fails", async () => {
 
   await waitFor(() => {
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Journal-Service momentan nicht erreichbar.",
+      "Personal Journal momentan nicht verfügbar.",
     );
   });
 });

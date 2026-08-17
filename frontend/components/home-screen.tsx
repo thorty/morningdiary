@@ -7,9 +7,9 @@ import { MorningCheckin } from "@/components/morning-checkin";
 import { MoodTrend } from "@/components/mood-trend";
 import { PersonalJournal } from "@/components/personal-journal";
 import {
-  createHttpPersonalJournalApiClient,
-  type PersonalJournalApiClient,
-} from "@/lib/api/client";
+  createLocalPersonalJournalApiClient,
+} from "@/lib/api/default-client";
+import type { PersonalJournalApiClient } from "@/lib/api/client";
 import type { MorningCheckinResponse } from "@/lib/api/types";
 
 type HomeScreenProps = {
@@ -18,7 +18,7 @@ type HomeScreenProps = {
   breathingDurationSeconds?: number;
 };
 
-const defaultClient = createHttpPersonalJournalApiClient();
+const defaultClient = createLocalPersonalJournalApiClient();
 
 function greetingFor(date: Date): string {
   const hour = date.getHours();
@@ -33,7 +33,7 @@ export function HomeScreen({
   breathingDurationSeconds,
 }: HomeScreenProps) {
   const [serviceStatus, setServiceStatus] = useState(
-    "Verbinde mit dem Journal-Service...",
+    "Personal Journal wird geladen...",
   );
   const [journalSnapshots, setJournalSnapshots] = useState<
     MorningCheckinResponse[]
@@ -49,10 +49,10 @@ export function HomeScreen({
   useEffect(() => {
     let isMounted = true;
     void apiClient.getHealth().then(
-      () => isMounted && setServiceStatus("Journal-Service bereit."),
+      () => isMounted && setServiceStatus("Personal Journal bereit."),
       () =>
         isMounted &&
-        setServiceStatus("Journal-Service momentan nicht erreichbar."),
+        setServiceStatus("Personal Journal momentan nicht verfügbar."),
     );
     return () => {
       isMounted = false;

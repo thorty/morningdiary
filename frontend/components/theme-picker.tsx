@@ -11,10 +11,11 @@ type ThemePickerProps = {
 export function ThemePicker({ automaticTheme }: ThemePickerProps) {
   const [mode, setMode] = useState<ThemeMode>("auto");
   const [isHydrated, setIsHydrated] = useState(false);
+  const [storageError, setStorageError] = useState<string | null>(null);
   const activeTheme = mode === "auto" ? automaticTheme : mode;
 
   useEffect(() => {
-    setMode(loadThemeMode());
+    setMode(loadThemeMode(() => setStorageError("Die Farbstimmung konnte nicht aus dem Browser-Speicher geladen werden.")));
     setIsHydrated(true);
   }, []);
 
@@ -24,10 +25,10 @@ export function ThemePicker({ automaticTheme }: ThemePickerProps) {
 
   function selectTheme(nextMode: ThemeMode) {
     setMode(nextMode);
-    saveThemeMode(nextMode);
+    saveThemeMode(nextMode, () => setStorageError("Die Farbstimmung konnte nicht im Browser-Speicher gespeichert werden."));
   }
 
-  return (
+  return <>
     <fieldset className="theme-picker">
       <legend>Farbstimmung</legend>
       <div className="theme-options">
@@ -39,5 +40,6 @@ export function ThemePicker({ automaticTheme }: ThemePickerProps) {
         ))}
       </div>
     </fieldset>
-  );
+    {storageError ? <p className="status" role="alert">{storageError}</p> : null}
+  </>;
 }

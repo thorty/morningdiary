@@ -8,6 +8,9 @@ import { PersonalJournalPage } from "@/components/personal-journal-page";
 import type { PersonalJournalApiClient } from "@/lib/api/client";
 import type { MorningCheckinAnswer, MorningCheckinResponse } from "@/lib/api/types";
 import type { UserProfile, UserProfileStore } from "@/lib/user-profile-store";
+import { createLocalPersonalJournalApiClient } from "@/lib/api/default-client";
+import { createBrowserLocalPersonalJournalStore } from "@/lib/personal-journal-store";
+import { MemoryStorage } from "@/tests/support/memory-storage";
 
 const date = "2026-08-04";
 const profile: UserProfile = {
@@ -114,4 +117,26 @@ test("shows the interactive p5.js breathing animation", async () => {
   render(<MorningCheckinPage apiClient={client()} todayDateProvider={() => new Date("2026-08-04T12:00:00")} />);
 
   expect(await screen.findByRole("img", { name: "Interaktive Atemanimation" })).toBeInTheDocument();
+});
+
+test("restores an autosaved response after the Morning Check-in remounts", async () => {
+  const storage = new MemoryStorage();
+  const apiClient = createLocalPersonalJournalApiClient(
+    createBrowserLocalPersonalJournalStore(storage, () => "local-checkin"),
+  );
+  const todayDateProvider = () => new Date("2026-08-04T12:00:00");
+
+  const firstPage = render(
+    <MorningCheckinPage apiClient={apiClient} todayDateProvider={todayDateProvider} />,
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Breathing Exercise überspringen" }));
+  fireEvent.click(screen.getByRole("radio", { name: "4 Gut" }));
+  fireEvent.click(screen.getByRole("button", { name: "Antwort speichern und weiter" }));
+  expect(await screen.findByRole("heading", { name: "Frage 2 von 6", level: 3 })).toBeInTheDocument();
+
+  firstPage.unmount();
+  render(<MorningCheckinPage apiClient={apiClient} todayDateProvider={todayDateProvider} />);
+
+  expect(await screen.findByRole("heading", { name: "Frage 2 von 6", level: 3 })).toBeInTheDocument();
+  expect(screen.getByText("Aktiver Morning Check-in: 2026-08-04")).toBeInTheDocument();
 });

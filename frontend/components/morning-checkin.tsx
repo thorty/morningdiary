@@ -14,6 +14,7 @@ import type {
   MorningCheckinResponse,
 } from "@/lib/api/types";
 import { loadCoachSummaryEnabled } from "@/lib/coach-summary-settings";
+import { emojiForMood } from "@/lib/mood";
 
 const BREATHING_DURATION_SECONDS = 30;
 const BREATHING_CYCLE_SECONDS = 10;
@@ -27,14 +28,6 @@ const QUESTION_CARDS = [
   { kicker: "Absicht", prompt: "Welche freundliche Absicht nimmst du in den Tag mit?" },
 ];
 const QUESTION_COUNT = QUESTION_CARDS.length;
-
-const MOOD_FACE_PATHS: Record<string, string> = {
-  1: "M8 15c1.2-1.2 2.6-1.8 4-1.8s2.8.6 4 1.8",
-  2: "M8 14.5h8",
-  3: "M8 14h8",
-  4: "M8 13.5c1.2 1.2 2.6 1.8 4 1.8s2.8-.6 4-1.8",
-  5: "M7.5 13c1.4 1.8 2.9 2.7 4.5 2.7s3.1-.9 4.5-2.7",
-};
 
 type MorningCheckinProps = {
   apiClient: PersonalJournalApiClient;
@@ -371,11 +364,9 @@ export function MorningCheckin({
                                   value={rating}
                                 />
                                 <span className="sr-only">{rating}</span>
-                                <svg aria-hidden="true" viewBox="0 0 24 24">
-                                  <circle cx="9" cy="10" fill="currentColor" r="1" />
-                                  <circle cx="15" cy="10" fill="currentColor" r="1" />
-                                  <path d={MOOD_FACE_PATHS[rating]} fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
-                                </svg>
+                                <span aria-hidden="true" className="mood-emoji">
+                                  {emojiForMood(Number(rating))}
+                                </span>
                                 <small>{label}</small>
                               </label>
                             ),

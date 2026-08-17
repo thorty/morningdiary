@@ -429,10 +429,10 @@ h3 {
   display: block;
 }
 
-.mood-option svg {
+.mood-emoji {
   display: block;
-  width: 1.6rem;
-  height: 1.6rem;
+  font-size: 1.6rem;
+  line-height: 1.6rem;
   margin: 0 auto;
 }
 
@@ -648,6 +648,15 @@ h3 {
 .entry-action {
   width: 100%;
   margin: 1.5rem 0 0;
+}
+
+.entry-link {
+  display: inline-block;
+  margin-top: 1.25rem;
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-underline-offset: 0.2em;
 }
 
 .completion-status {

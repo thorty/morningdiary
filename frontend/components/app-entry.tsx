@@ -89,6 +89,10 @@ function LockScreen({
     setError("Die PIN ist nicht korrekt. Bitte versuche es erneut.");
   }
 
+  if (isResettingPin) {
+    return <PinReset profile={profile} onComplete={onPinReset} onCancel={() => setIsResettingPin(false)} />;
+  }
+
   return (
     <main>
       <div className="shell entry-shell">
@@ -102,8 +106,7 @@ function LockScreen({
             {error ? <p className="status" role="alert">{error}</p> : null}
             <button className="primary-action entry-action" type="submit">Entsperren</button>
           </form>
-          <button className="secondary-action" onClick={() => setIsResettingPin(true)} type="button">PIN zurücksetzen</button>
-          {isResettingPin ? <PinReset profile={profile} onComplete={onPinReset} /> : null}
+          <a className="entry-link" href="#pin-reset" onClick={(event) => { event.preventDefault(); setError(null); setIsResettingPin(true); }}>PIN zurücksetzen</a>
         </section>
       </div>
     </main>
@@ -113,9 +116,11 @@ function LockScreen({
 function PinReset({
   profile,
   onComplete,
+  onCancel,
 }: {
   profile: UserProfile;
   onComplete: (profile: UserProfile) => void;
+  onCancel: () => void;
 }) {
   const [step, setStep] = useState<"challenge" | "new-pin">("challenge");
   const [answer, setAnswer] = useState("");
@@ -140,25 +145,30 @@ function PinReset({
   }
 
   return (
-    <div className="entry-card" aria-labelledby="pin-reset-title">
-      {step === "challenge" ? (
-        <form onSubmit={verifyAnswer}>
-          <h2 className="entry-heading" id="pin-reset-title">PIN zurücksetzen</h2>
-          <p className="lead">{profile.securityChallengeQuestion}</p>
-          <label className="entry-label" htmlFor="reset-answer">Antwort</label>
-          <input autoFocus className="entry-input" id="reset-answer" onChange={(event) => setAnswer(event.target.value)} value={answer} />
-          {error ? <p className="status" role="alert">{error}</p> : null}
-          <button className="primary-action entry-action" type="submit">Antwort prüfen</button>
-        </form>
-      ) : (
-        <form onSubmit={saveNewPin}>
-          <h2 className="entry-heading" id="pin-reset-title">Neue PIN festlegen</h2>
-          <label className="entry-label" htmlFor="new-pin">Neue PIN</label>
-          <input autoFocus className="entry-input" id="new-pin" inputMode="numeric" onChange={(event) => setNewPin(event.target.value)} type="password" value={newPin} />
-          <button className="primary-action entry-action" type="submit">PIN speichern</button>
-        </form>
-      )}
-    </div>
+    <main>
+      <div className="shell entry-shell">
+        <section className="entry-card" aria-labelledby="pin-reset-title">
+          {step === "challenge" ? (
+            <form onSubmit={verifyAnswer}>
+              <h1 className="entry-heading" id="pin-reset-title">PIN zurücksetzen</h1>
+              <p className="lead">{profile.securityChallengeQuestion}</p>
+              <label className="entry-label" htmlFor="reset-answer">Antwort</label>
+              <input autoFocus className="entry-input" id="reset-answer" onChange={(event) => setAnswer(event.target.value)} value={answer} />
+              {error ? <p className="status" role="alert">{error}</p> : null}
+              <button className="primary-action entry-action" type="submit">Antwort prüfen</button>
+            </form>
+          ) : (
+            <form onSubmit={saveNewPin}>
+              <h1 className="entry-heading" id="pin-reset-title">Neue PIN festlegen</h1>
+              <label className="entry-label" htmlFor="new-pin">Neue PIN</label>
+              <input autoFocus className="entry-input" id="new-pin" inputMode="numeric" onChange={(event) => setNewPin(event.target.value)} type="password" value={newPin} />
+              <button className="primary-action entry-action" type="submit">PIN speichern</button>
+            </form>
+          )}
+          <a className="entry-link" href="#lock-screen" onClick={(event) => { event.preventDefault(); onCancel(); }}>Zurück zur PIN-Eingabe</a>
+        </section>
+      </div>
+    </main>
   );
 }
 
@@ -206,9 +216,9 @@ function Onboarding({ onComplete }: { onComplete: (profile: UserProfile) => void
           <p className="date-label">Schritt {step} von 3</p>
           {step === 1 ? (
             <>
-              <h1 className="title" id="onboarding-title">Willkommen bei Morning Coach.</h1>
+              <h1 className="title" id="onboarding-title">Willkommen beim Morning Diary.</h1>
               <p className="lead">Ein ruhiger, persönlicher Moment für deinen Start in den Tag. Deine Antworten bleiben in deinem persönlichen Journal.</p>
-              <p className="privacy-note">Deine App-Daten werden lokal auf diesem Gerät gespeichert. Für die Coach Summary werden Antworten anonym an OpenAI gesendet. Du kannst diese Funktion jederzeit in den Einstellungen deaktivieren.</p>
+              <p className="privacy-note">Deine App-Daten werden lokal in diesem Browser-Profil gespeichert und nicht automatisch zwischen Browsern oder Geräten synchronisiert. Für die Coach Summary werden Antworten anonym an OpenAI gesendet. Du kannst diese Funktion jederzeit in den Einstellungen deaktivieren.</p>
               <button className="primary-action entry-action" onClick={showProfileSetup} type="button">Weiter</button>
             </>
           ) : step === 2 ? (

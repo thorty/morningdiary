@@ -185,6 +185,27 @@ test("personal journal links snapshots and supports its direct detail resolution
   expect(await screen.findByText("Ein guter Start.")).toBeInTheDocument();
 });
 
+test("direct Daily Snapshot detail uses the local identifier lookup instead of journal history", async () => {
+  const snapshot = {
+    id: "snapshot-local",
+    browser_date: "2026-08-04",
+    status: "completed" as const,
+    answers: [4, "Dankbar", null, null, null, null],
+    next_question_number: null,
+    coach_summary: "Lokal gefunden.",
+  };
+  const findPersonalJournalSnapshot = vi.fn(async () => snapshot);
+  const listPersonalJournalSnapshots = vi.fn(async () => {
+    throw new Error("history should not be requested");
+  });
+
+  render(<DailySnapshotPage id="snapshot-local" apiClient={makeMockClient({ findPersonalJournalSnapshot, listPersonalJournalSnapshots })} />);
+
+  expect(await screen.findByText("Lokal gefunden.")).toBeInTheDocument();
+  expect(findPersonalJournalSnapshot).toHaveBeenCalledWith("snapshot-local");
+  expect(listPersonalJournalSnapshots).not.toHaveBeenCalled();
+});
+
 test("direct Daily Snapshot detail resolves its saved snapshot, shows all responses, and stays immutable after reload", async () => {
   const snapshots = [
     {

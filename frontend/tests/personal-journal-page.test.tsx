@@ -156,6 +156,20 @@ test("the Personal Journal configuration deletes visible history only after conf
   vi.unstubAllGlobals();
 });
 
+test("the Personal Journal configuration explains local deletion failures", async () => {
+  const client = apiClient();
+  client.deletePersonalJournal = vi.fn(async () => { throw new Error("Das Personal Journal konnte nicht gelöscht werden."); });
+  vi.stubGlobal("confirm", vi.fn(() => true));
+
+  render(<PersonalJournalPage apiClient={client} />);
+  fireEvent.click(screen.getByRole("button", { name: "Einstellungen" }));
+  fireEvent.click(screen.getByRole("button", { name: "Historie löschen" }));
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("Das Personal Journal konnte nicht gelöscht werden.");
+  expect(screen.getByRole("button", { name: "Historie löschen" })).toBeEnabled();
+  vi.unstubAllGlobals();
+});
+
 test("home and Personal Journal expose routes to each other", async () => {
   const client = apiClient();
   client.getOrCreateMorningCheckin = vi.fn(async () => snapshot("04", "Heute"));

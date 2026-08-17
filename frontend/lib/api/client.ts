@@ -14,6 +14,7 @@ export interface PersonalJournalApiClient {
   saveMorningCheckinAnswer(checkinId: string, payload: SaveMorningCheckinAnswerRequest): Promise<MorningCheckinResponse>;
   restartMorningCheckin(checkinId: string): Promise<MorningCheckinResponse>;
   completeMorningCheckin(checkinId: string, payload?: CompleteMorningCheckinRequest): Promise<MorningCheckinResponse>;
+  findPersonalJournalSnapshot?(id: string): Promise<MorningCheckinResponse | null>;
   listPersonalJournalSnapshots(): Promise<MorningCheckinResponse[]>;
   exportPersonalJournal(): Promise<PersonalJournalExportResponse>;
   deletePersonalJournal(): Promise<void>;

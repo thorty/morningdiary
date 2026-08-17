@@ -11,6 +11,7 @@ import type { PersonalJournalApiClient } from "@/lib/api/client";
 import { defaultPersonalJournalApiClient } from "@/lib/api/default-client";
 import { resolveAutomaticTheme } from "@/lib/theme";
 import type { MorningCheckinResponse } from "@/lib/api/types";
+import { PersonalJournalStoreError } from "@/lib/personal-journal-store";
 
 export function PersonalJournalPage({ apiClient = defaultPersonalJournalApiClient }: { apiClient?: PersonalJournalApiClient }) {
   const [snapshots, setSnapshots] = useState<MorningCheckinResponse[]>([]);
@@ -22,7 +23,7 @@ export function PersonalJournalPage({ apiClient = defaultPersonalJournalApiClien
   useEffect(() => {
     void apiClient.listPersonalJournalSnapshots().then(
       (response) => setSnapshots(response),
-      () => setError("Die Personal Journal Einträge konnten nicht geladen werden."),
+      (caughtError) => setError(caughtError instanceof PersonalJournalStoreError ? caughtError.message : "Die Personal Journal Einträge konnten nicht geladen werden."),
     ).finally(() => setIsLoading(false));
   }, [apiClient]);
 

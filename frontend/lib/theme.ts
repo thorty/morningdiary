@@ -34,19 +34,20 @@ export function isThemeMode(value: string | null): value is ThemeMode {
   return value === "auto" || themes.some((theme) => theme.id === value);
 }
 
-export function loadThemeMode(): ThemeMode {
+export function loadThemeMode(onError?: (error: Error) => void): ThemeMode {
   try {
     const value = window.localStorage.getItem(themeStorageKey);
     return isThemeMode(value) ? value : "auto";
-  } catch {
+  } catch (caughtError) {
+    onError?.(caughtError instanceof Error ? caughtError : new Error("Browser storage unavailable"));
     return "auto";
   }
 }
 
-export function saveThemeMode(mode: ThemeMode) {
+export function saveThemeMode(mode: ThemeMode, onError?: (error: Error) => void) {
   try {
     window.localStorage.setItem(themeStorageKey, mode);
-  } catch {
-    // Theme selection remains usable when browser storage is unavailable.
+  } catch (caughtError) {
+    onError?.(caughtError instanceof Error ? caughtError : new Error("Browser storage unavailable"));
   }
 }

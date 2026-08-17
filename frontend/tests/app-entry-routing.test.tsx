@@ -41,7 +41,7 @@ test("a new user completes onboarding and reaches Home with an active session", 
 
   render(<RootPage profileStore={store} />);
 
-  expect(await screen.findByRole("heading", { name: "Willkommen bei Morning Coach." })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Willkommen beim Morning Diary." })).toBeInTheDocument();
   expect(screen.getByText(/App-Daten werden lokal/i)).toBeInTheDocument();
   expect(screen.getByText(/anonym an OpenAI gesendet/i)).toBeInTheDocument();
 
@@ -69,7 +69,7 @@ test("a stored profile without an active session shows the lock screen with the 
   expect(await screen.findByRole("heading", { name: "Willkommen zurück, Mara" })).toBeInTheDocument();
   expect(screen.getByText(/Bitte entsperre dein Profil/i)).toBeInTheDocument();
   expect(screen.getByLabelText("PIN")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "PIN zurücksetzen" })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "PIN zurücksetzen" })).toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: "Willkommen bei Morning Coach" })).not.toBeInTheDocument();
 });
 
@@ -96,17 +96,19 @@ test("an incorrect PIN reports an inline error and clears the input", async () =
 test("PIN Reset shows the stored Security Challenge question", async () => {
   render(<RootPage profileStore={makeStore(profile)} />);
 
-  fireEvent.click(await screen.findByRole("button", { name: "PIN zurücksetzen" }));
+  fireEvent.click(await screen.findByRole("link", { name: "PIN zurücksetzen" }));
 
   expect(screen.getByRole("heading", { name: "PIN zurücksetzen" })).toBeInTheDocument();
   expect(screen.getByText(profile.securityChallengeQuestion)).toBeInTheDocument();
   expect(screen.getByLabelText("Antwort")).toBeInTheDocument();
+  expect(screen.queryByLabelText("PIN")).not.toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Willkommen zurück, Mara" })).not.toBeInTheDocument();
 });
 
 test("an incorrect Security Challenge answer reports an error and clears the input", async () => {
   render(<RootPage profileStore={makeStore(profile)} />);
 
-  fireEvent.click(await screen.findByRole("button", { name: "PIN zurücksetzen" }));
+  fireEvent.click(await screen.findByRole("link", { name: "PIN zurücksetzen" }));
   const answerInput = screen.getByLabelText("Antwort");
   fireEvent.change(answerInput, { target: { value: "Keks" } });
   fireEvent.click(screen.getByRole("button", { name: "Antwort prüfen" }));
@@ -119,7 +121,7 @@ test("a correct Security Challenge answer accepts a new PIN and preserves the re
   const store = makeStore(profile);
   render(<RootPage profileStore={store} />);
 
-  fireEvent.click(await screen.findByRole("button", { name: "PIN zurücksetzen" }));
+  fireEvent.click(await screen.findByRole("link", { name: "PIN zurücksetzen" }));
   fireEvent.change(screen.getByLabelText("Antwort"), { target: { value: "fLoCkE" } });
   fireEvent.click(screen.getByRole("button", { name: "Antwort prüfen" }));
 
