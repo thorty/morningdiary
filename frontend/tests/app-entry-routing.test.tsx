@@ -60,15 +60,37 @@ test("a new user completes onboarding and reaches Home with an active session", 
 
   expect(store.save).toHaveBeenCalledWith(profile);
   expect(await screen.findByRole("heading", { name: /Guten (Morgen|Tag|Abend)\./ })).toBeInTheDocument();
-  expect(screen.queryByRole("heading", { name: "Dein Profil ist gesperrt" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Willkommen zurück, Mara" })).not.toBeInTheDocument();
 });
 
-test("a stored profile without an active session shows the lock screen", async () => {
+test("a stored profile without an active session shows the lock screen with the stored name", async () => {
   render(<RootPage profileStore={makeStore(profile)} />);
 
-  expect(await screen.findByRole("heading", { name: "Dein Profil ist gesperrt." })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Willkommen zurück, Mara" })).toBeInTheDocument();
   expect(screen.getByText(/Bitte entsperre dein Profil/i)).toBeInTheDocument();
+  expect(screen.getByLabelText("PIN")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "PIN zurücksetzen" })).toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: "Willkommen bei Morning Coach" })).not.toBeInTheDocument();
+});
+
+test("entering the correct PIN unlocks the Home page", async () => {
+  render(<RootPage profileStore={makeStore(profile)} />);
+
+  fireEvent.change(await screen.findByLabelText("PIN"), { target: { value: profile.pin } });
+  fireEvent.click(screen.getByRole("button", { name: "Entsperren" }));
+
+  expect(await screen.findByRole("heading", { name: /Guten (Morgen|Tag|Abend)\./ })).toBeInTheDocument();
+});
+
+test("an incorrect PIN reports an inline error and clears the input", async () => {
+  render(<RootPage profileStore={makeStore(profile)} />);
+
+  const pinInput = await screen.findByLabelText("PIN");
+  fireEvent.change(pinInput, { target: { value: "9999" } });
+  fireEvent.click(screen.getByRole("button", { name: "Entsperren" }));
+
+  expect(screen.getByRole("alert")).toHaveTextContent("Die PIN ist nicht korrekt. Bitte versuche es erneut.");
+  expect(pinInput).toHaveValue("");
 });
 
 test("the shared access gate hides protected route content until a profile is active", async () => {
@@ -78,7 +100,7 @@ test("the shared access gate hides protected route content until a profile is ac
     </AppAccessProvider>,
   );
 
-  expect(await screen.findByRole("heading", { name: "Dein Profil ist gesperrt." })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Willkommen zurück, Mara" })).toBeInTheDocument();
   expect(screen.queryByText("Geschützter Inhalt")).not.toBeInTheDocument();
 });
 
@@ -110,7 +132,7 @@ test("refreshing the app resets the active session to the lock screen", async ()
     </AppAccessProvider>,
   );
 
-  expect(await screen.findByRole("heading", { name: "Dein Profil ist gesperrt." })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Willkommen zurück, Mara" })).toBeInTheDocument();
   unmount();
 
   render(
@@ -119,6 +141,22 @@ test("refreshing the app resets the active session to the lock screen", async ()
     </AppAccessProvider>,
   );
 
-  expect(await screen.findByRole("heading", { name: "Dein Profil ist gesperrt." })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Willkommen zurück, Mara" })).toBeInTheDocument();
   expect(screen.queryByText("Geschützter Inhalt")).not.toBeInTheDocument();
+});
+
+test("logout returns to the lock screen and permits a later unlock", async () => {
+  const store = makeStore(profile);
+  render(<RootPage profileStore={store} />);
+
+  fireEvent.change(await screen.findByLabelText("PIN"), { target: { value: profile.pin } });
+  fireEvent.click(screen.getByRole("button", { name: "Entsperren" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Einstellungen" }));
+  fireEvent.click(screen.getByRole("button", { name: "Abmelden" }));
+
+  expect(await screen.findByRole("heading", { name: "Willkommen zurück, Mara" })).toBeInTheDocument();
+  expect(store.clear).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText("PIN"), { target: { value: profile.pin } });
+  fireEvent.click(screen.getByRole("button", { name: "Entsperren" }));
+  expect(await screen.findByRole("heading", { name: /Guten (Morgen|Tag|Abend)\./ })).toBeInTheDocument();
 });

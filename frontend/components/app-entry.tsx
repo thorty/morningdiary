@@ -11,7 +11,11 @@ type AppEntryProps = {
   children: React.ReactNode;
 };
 
-const accessContext = createContext(false);
+type AppAccess = {
+  logout(): void;
+};
+
+const accessContext = createContext<AppAccess | null>(null);
 
 export function AppAccessProvider({ profileStore = localStorageUserProfileStore, children }: AppEntryProps) {
   const [profile, setProfile] = useState<UserProfile | null | undefined>(undefined);
@@ -33,9 +37,9 @@ export function AppAccessProvider({ profileStore = localStorageUserProfileStore,
     }} />;
   }
 
-  if (!hasActiveSession) return <LockScreen />;
+  if (!hasActiveSession) return <LockScreen profile={profile} onUnlock={() => setHasActiveSession(true)} />;
 
-  return <accessContext.Provider value>{children}</accessContext.Provider>;
+  return <accessContext.Provider value={{ logout: () => setHasActiveSession(false) }}>{children}</accessContext.Provider>;
 }
 
 export function RootPage({ profileStore }: { profileStore?: UserProfileStore }) {
@@ -45,15 +49,39 @@ export function RootPage({ profileStore }: { profileStore?: UserProfileStore }) 
   return <AppAccessProvider><HomePage /></AppAccessProvider>;
 }
 
-function LockScreen() {
+export function useAppAccess(): AppAccess {
+  const access = useContext(accessContext);
+  return access ?? { logout: () => undefined };
+}
+
+function LockScreen({ profile, onUnlock }: { profile: UserProfile; onUnlock: () => void }) {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  function unlock(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (pin === profile.pin) {
+      onUnlock();
+      return;
+    }
+    setPin("");
+    setError("Die PIN ist nicht korrekt. Bitte versuche es erneut.");
+  }
+
   return (
     <main>
       <div className="shell entry-shell">
         <section className="entry-card" aria-labelledby="lock-screen-title">
           <p className="date-label">Morning Coach</p>
-          <h1 className="title" id="lock-screen-title">Dein Profil ist gesperrt.</h1>
+          <h1 className="title" id="lock-screen-title">Willkommen zurück, {profile.name}</h1>
           <p className="lead">Bitte entsperre dein Profil, um deinen Morning Coach zu öffnen.</p>
-          <p className="status">Der Lock Screen wird in Kürze ergänzt.</p>
+          <form onSubmit={unlock}>
+            <label className="entry-label" htmlFor="unlock-pin">PIN</label>
+            <input autoFocus className="entry-input" id="unlock-pin" inputMode="numeric" onChange={(event) => setPin(event.target.value)} type="password" value={pin} />
+            {error ? <p className="status" role="alert">{error}</p> : null}
+            <button className="primary-action entry-action" type="submit">Entsperren</button>
+          </form>
+          <button className="secondary-action" type="button">PIN zurücksetzen</button>
         </section>
       </div>
     </main>

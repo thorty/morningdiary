@@ -1,13 +1,21 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 
+import { AppAccessProvider } from "@/components/app-entry";
 import { HomePage } from "@/components/home-page";
 import { MorningCheckinPage } from "@/components/morning-checkin-page";
 import { PersonalJournalPage } from "@/components/personal-journal-page";
 import type { PersonalJournalApiClient } from "@/lib/api/client";
 import type { MorningCheckinAnswer, MorningCheckinResponse } from "@/lib/api/types";
+import type { UserProfile, UserProfileStore } from "@/lib/user-profile-store";
 
 const date = "2026-08-04";
+const profile: UserProfile = {
+  name: "Mara",
+  pin: "1234",
+  securityChallengeQuestion: "Wie heißt mein Hund?",
+  securityChallengeAnswer: "Flocke",
+};
 const initialCheckin: MorningCheckinResponse = {
   id: "today",
   browser_date: date,
@@ -49,6 +57,14 @@ function client(): PersonalJournalApiClient {
   };
 }
 
+function profileStore(): UserProfileStore {
+  return {
+    load: () => profile,
+    save: () => undefined,
+    clear: () => undefined,
+  };
+}
+
 test("takes a person from the start page through a Morning Check-in into their Personal Journal", async () => {
   const apiClient = client();
   const todayDateProvider = () => new Date("2026-08-04T12:00:00");
@@ -73,6 +89,25 @@ test("takes a person from the start page through a Morning Check-in into their P
   render(<PersonalJournalPage apiClient={apiClient} />);
   await waitFor(() => expect(screen.getByRole("article", { name: "Daily Snapshot vom 2026-08-04" })).toBeInTheDocument());
   expect(screen.getByRole("link", { name: "Zur Startseite" })).toHaveAttribute("href", "/");
+});
+
+test("returns through the lock screen after logging out and unlocking again", async () => {
+  const apiClient = client();
+  render(
+    <AppAccessProvider profileStore={profileStore()}>
+      <HomePage apiClient={apiClient} todayDateProvider={() => new Date("2026-08-04T12:00:00")} />
+    </AppAccessProvider>,
+  );
+
+  fireEvent.change(await screen.findByLabelText("PIN"), { target: { value: profile.pin } });
+  fireEvent.click(screen.getByRole("button", { name: "Entsperren" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Einstellungen" }));
+  fireEvent.click(screen.getByRole("button", { name: "Abmelden" }));
+
+  expect(await screen.findByRole("heading", { name: "Willkommen zurück, Mara" })).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("PIN"), { target: { value: profile.pin } });
+  fireEvent.click(screen.getByRole("button", { name: "Entsperren" }));
+  expect(await screen.findByRole("heading", { name: /Guten (Morgen|Tag|Abend)\./ })).toBeInTheDocument();
 });
 
 test("shows the interactive p5.js breathing animation", async () => {

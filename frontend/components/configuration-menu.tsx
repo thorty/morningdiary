@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 
+import { useAppAccess } from "@/components/app-entry";
 import type { PersonalJournalApiClient } from "@/lib/api/client";
 import { loadCoachSummaryEnabled, saveCoachSummaryEnabled } from "@/lib/coach-summary-settings";
 
@@ -12,6 +13,7 @@ export function ConfigurationMenu({
   apiClient: PersonalJournalApiClient;
   onJournalDeleted: () => void;
 }) {
+  const { logout } = useAppAccess();
   const [isOpen, setIsOpen] = useState(false);
   const [coachSummaryEnabled, setCoachSummaryEnabled] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -53,6 +55,7 @@ export function ConfigurationMenu({
           <button className="configuration-delete" disabled={isDeleting} onClick={() => void deleteJournal()} type="button">
             {isDeleting ? "Historie wird gelöscht..." : "Historie löschen"}
           </button>
+          <button className="configuration-logout" onClick={logout} type="button">Abmelden</button>
         </div>
       ) : null}
     </div>
