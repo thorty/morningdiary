@@ -45,12 +45,12 @@ browser profile.
 
 ## 3. Identify the Final Storage Key and Schema
 
-Do not guess the key. Ticket 02 owns the final namespaced storage contract and
-may choose a different key before implementation is complete.
+The final production key is `morning-coach.personal-journal`, and the current
+document version is `1`.
 
-1. Inspect the production `PersonalJournalStore` implementation and copy its
-   exported storage key and schema version. The UI components must not be used
-   as the source of this information.
+1. Inspect the production `PersonalJournalStore` implementation and confirm
+   its exported storage key and schema version. The UI components must not be
+   used as the source of this information.
 2. In browser developer tools, open **Application** (or **Storage**) >
    **Local Storage** for the frontend origin.
 3. Confirm the key is the Personal Journal Store key, not the separate User
@@ -58,19 +58,21 @@ may choose a different key before implementation is complete.
    versioned document with the store's exact field names.
 4. If the key or schema is not available, stop. Do not write a guessed payload.
 
-The console snippet below uses `STORAGE_KEY` and `SCHEMA_VERSION` placeholders
-deliberately. Replace them with the values from Ticket 02. The expected record
-fields are the fields used by the browser-local contract:
+The expected record fields are the fields used by the browser-local contract:
 
 - `id`
 - `browser_date`
 - `status`
 - `answers`
-- `answered_questions`
 - `next_question_number`
 - `coach_summary`
 - `coach_summary_status`
 - `coach_summary_retry_available`
+
+The storage document contains `version`, `unfinished_checkins`, and
+`snapshots`. Unfinished records belong in `unfinished_checkins`; completed
+records belong in `snapshots`. `answered_questions` is a legacy TinyDB field
+and is not written to the final document.
 
 ## 4. Prepare the Legacy JSON
 
@@ -107,15 +109,15 @@ stable identifier to preserve.
 Close every other frontend tab and window for this browser profile before
 running the script. Run it in exactly one developer-console tab; this
 single-writer safeguard prevents another application tab from changing the
-target key during the migration. After replacing the schema placeholders,
-paste the backed-up JSON into the prompt when the script asks for it. The
+target key during the migration. Paste the backed-up JSON into the prompt when
+the script asks for it. The
 script parses and validates every record before calling `setItem`. A malformed
 JSON value, invalid record, duplicate ID, or duplicate date aborts the
 migration without changing the target key.
 
 ```js
-const STORAGE_KEY = "REPLACE_WITH_TICKET_02_STORAGE_KEY";
-const SCHEMA_VERSION = 1; // Replace with the final store schema version.
+const STORAGE_KEY = "morning-coach.personal-journal";
+const SCHEMA_VERSION = 1;
 const legacyJson = window.prompt("Paste the backed-up TinyDB JSON");
 
 if (legacyJson === null) {
@@ -165,10 +167,6 @@ const records = Object.values(legacyRows).map((record, index) => {
       (answerIndex === 0 && Number.isInteger(answer) && answer >= 1 && answer <= 5) ||
       (answerIndex > 0 && typeof answer === "string")
     ) ||
-    !Array.isArray(record.answered_questions) ||
-    !record.answered_questions.every(
-      (question) => Number.isInteger(question) && question >= 1 && question <= 6,
-    ) ||
     !(
       record.next_question_number === null ||
       (Number.isInteger(record.next_question_number) &&
@@ -192,7 +190,6 @@ const records = Object.values(legacyRows).map((record, index) => {
     browser_date: record.browser_date,
     status: record.status,
     answers: [...record.answers],
-    answered_questions: [...record.answered_questions],
     next_question_number: record.next_question_number,
     coach_summary: record.coach_summary ?? null,
     coach_summary_status: record.coach_summary_status,
@@ -206,8 +203,9 @@ if (existing !== null) {
 }
 
 const payload = {
-  schema_version: SCHEMA_VERSION,
-  morning_checkins: records,
+  version: SCHEMA_VERSION,
+  unfinished_checkins: records.filter((record) => record.status === "unfinished"),
+  snapshots: records.filter((record) => record.status === "completed"),
 };
 
 // The write happens only after all legacy records have passed validation.
@@ -215,8 +213,11 @@ try {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   const written = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
   if (
-    written.schema_version !== SCHEMA_VERSION ||
-    JSON.stringify(written.morning_checkins) !== JSON.stringify(records)
+    written.version !== SCHEMA_VERSION ||
+    JSON.stringify(written.unfinished_checkins) !==
+      JSON.stringify(records.filter((record) => record.status === "unfinished")) ||
+    JSON.stringify(written.snapshots) !==
+      JSON.stringify(records.filter((record) => record.status === "completed"))
   ) {
     fail("the written browser-storage document did not preserve every field");
   }
