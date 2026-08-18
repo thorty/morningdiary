@@ -1,7 +1,0 @@
-Start with /grill-with-docs.
-Your draft establishes the product shape, but key v1 decisions remain unresolved: user identity and privacy, one-entry-per-day behavior, LLM provider/failure behavior, deployment, and the frontend-backend boundary. The skill will turn those into explicit requirements and record durable terms/decisions in CONTEXT.md and ADRs.
-Then use:
-1. /to-spec to convert the resolved design into a buildable spec.
-2. /to-tickets to create dependency-ordered tickets under .scratch/.
-3. Start a fresh session per ticket with /implement.
-Use /prototype only if the breathing timer or one-question flow needs a visual/interaction experiment before you can decide its behavior.
