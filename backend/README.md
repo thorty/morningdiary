@@ -2,7 +2,7 @@
 
 Stateless FastAPI backend for the Morning Coach Personal Journal.
 
-The Personal Journal is stored in the frontend's browser-local `localStorage`. This service does not create or read TinyDB files and does not retain Morning Check-ins, Daily Snapshots, exports, or User Profiles. It provides the Health Check and the optional Coach Summary operation only.
+The Personal Journal is stored in the frontend's browser-local `localStorage`. This service does not retain Morning Check-ins, Daily Snapshots, exports, or User Profiles. It provides the Health Check and the optional Coach Summary operation only.
 
 ## Local commands (uv)
 

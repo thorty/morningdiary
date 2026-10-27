@@ -6,6 +6,6 @@ We deliberately chose not to implement server-side authentication. The app has n
 
 ## Considered Options
 
-- **Server-side authentication with per-user TinyDB tables** — rejected; over-engineered for the single-household use case and would require backend changes to every API endpoint.
+- **Server-side authentication with per-user journal storage** — rejected; over-engineered for the single-household use case and would require backend changes to every API endpoint.
 - **No gating at all** — rejected; anyone who opens the URL would immediately see the journal, which felt unacceptable even for a private network.
 - **Client-side soft gate (chosen)** — fits the MVP scope, keeps the backend identity-free, and matches the real threat model.

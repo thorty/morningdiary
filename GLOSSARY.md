@@ -18,7 +18,7 @@ _Avoid_: Account, user journal, profile
 
 **Personal Journal Store**:
 The replaceable frontend persistence boundary for unfinished Morning Check-ins, completed Daily Snapshots, Journal Export, and local deletion. UI components use this boundary instead of accessing `window.localStorage` directly. Its production implementation uses one versioned, namespaced `localStorage` document.
-_Avoid_: TinyDB store, journal API
+_Avoid_: Backend journal API
 
 **Coach Summary**:
 An optional, supportive, non-clinical reflection attached to a Daily Snapshot. It follows the predominant language of the check-in answers, defaulting to German when they are mixed; it is grounded only in those answers and never diagnoses, gives treatment advice, or invents facts. A Daily Snapshot remains complete when a Coach Summary cannot be generated. When the user opts out at completion time, the status is `not_requested` and no generation is attempted.
@@ -34,7 +34,7 @@ _Avoid_: OpenAI call, chatbot
 
 **Stateless Backend**:
 The FastAPI service that provides Health Check and optional Coach Summary generation. It does not persist Morning Check-ins, Daily Snapshots, Journal Exports, User Profiles, or browser-storage data. A Coach Summary request contains only the current answers and target language.
-_Avoid_: Journal backend, TinyDB backend
+_Avoid_: Journal backend
 
 **Journal Export**:
 A downloadable JSON backup containing every Daily Snapshot in the Personal Journal, including answers and any Coach Summary.

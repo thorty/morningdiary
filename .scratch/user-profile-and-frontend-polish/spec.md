@@ -150,7 +150,7 @@ The existing check-in journey test is extended to cover the new entry flow: no U
 - PIN complexity requirements (minimum length, allowed characters)
 - Multiple User Profiles in one browser profile
 - Changing the name or Security Challenge after Onboarding (a future Settings enhancement)
-- Backend changes — the backend remains fully identity-free; no user identifier is added to any API call or TinyDB record
+- Backend changes — the backend remains fully identity-free; no user identifier is added to any API call or persisted journal data.
 - Multi-user data isolation at the backend level — OS-level browser profile separation is relied upon for that (ADR-0001)
 - User Profile deletion independent of journal deletion
 - Server-side session management or token-based authentication
