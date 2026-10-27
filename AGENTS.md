@@ -11,3 +11,7 @@ The five default canonical triage labels are used. See `docs/agents/triage-label
 ### Domain docs
 
 This is a single-context layout: `CONTEXT.md` and `docs/adr/` live at the repository root. See `docs/agents/domain.md`.
+
+### Feature workflow
+
+For the idea-to-implementation workflow using Matt Pocock's skills, see `docs/agents/workflow.md`.
