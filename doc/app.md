@@ -1,78 +1,78 @@
-# Gratitude Morning Coach – Bauplan
+# Gratitude Morning Coach — Product Plan
 
-## Produktbeschreibung
+## Product Description
 
-**Kurzidee:**  
-Ein geführter „Morning Gratitude Coach“ als Web-App. Statt freiem Chat führt dich der Bot jeden Morgen durch eine feste Routine, kombiniert mit einer kurzen Atemübung, Dankbarkeit und Klarheit über den Tag. Alles wird gespeichert und am Ende bekommst du eine kompakte Zusammenfassung deines Tagesfokus.
+**Summary:**
+A guided “Morning Gratitude Coach” web app. Instead of an open-ended chat, the bot takes you through a fixed routine each morning, combining a short breathing exercise, gratitude, and clarity about the day. Everything is saved, and at the end you receive a concise summary of your daily focus.
 
-### Kernfunktionen
+### Core Features
 
-1. **Geführte Morgen-Routine (Interview)**
-   - Fester Flow mit 6 Fragen:
+1. **Guided Morning Routine (Check-in)**
+   - A fixed routine with six questions:
     1. Wie geht es dir gerade auf einer Skala von 1 bis 5 – und warum?
     2. Wofür bist du heute dankbar? Nenne drei Dinge.
     3. Welche drei Dinge möchtest du heute unbedingt tun? 
     4. Was wird heute deine „Happy Hour“ – ein besonderer Moment nur für dich?
     5. Was ist dein wichtigstes Ziel für diesen Tag?
     6. Was ist eine Sache, die du heute wirklich beeinflussen kannst?
-   - UI zeigt immer genau **eine Frage** + Eingabefeld (Text, ggf. Rating-Slider bei Q1).
+   - The UI shows exactly **one question** and an input field at a time (text, with an optional rating slider for Q1).
 
-2. **30-Sekunden Atem-Meditation**
-   - Vor dem Interview startet eine 30s-Breath-Komponente:
+2. **30-Second Breathing Meditation**
+   - A 30-second breathing component starts before the check-in:
      - Timer (Ring/Progress-Bar),
-     - kurze Anweisungen („4 Sekunden ein, 6 Sekunden aus …“),
-     - optional kurze Text-Hints, kein Audio nötig für v1.
-   - Nach Ablauf geht es automatisch zu Frage 1.
+     - brief instructions (“Breathe in for 4 seconds, out for 6 seconds…”),
+     - Optional short text prompts; audio is not required for v1.
+   - After the timer ends, the app automatically moves to question 1.
 
-3. **Gratitude-Chatbot-Logik (LLM)**
-   - LLM läuft als „Coach“, wird aber nicht für jede Frage gebraucht.
-   - Einsatz v1:
-     - Am Ende generiert das Modell eine Kurz-Zusammenfassung:
-       - Stimmung (1–5, verbalisierter Eindruck),
-       - Hauptthema (z.B. Fokus, Erholung, Unsicherheit),
-       - Empfehlung in 1–2 Sätzen (z.B. „Konzentriere dich heute auf …“).
-   - Später erweiterbar:
-     - Anpassung der Folgefragen je nach Stimmung,
-     - Feedback bei wiederkehrenden Mustern.
+3. **Gratitude Coach Logic (LLM)**
+   - The LLM acts as a “Coach” but is not needed for every question.
+   - For v1:
+     - At the end, the model generates a short summary containing:
+       - Mood (1–5, described in words),
+       - Main theme (e.g. focus, rest, uncertainty),
+       - A recommendation in 1–2 sentences (e.g. “Focus on … today.”).
+   - Potential future extensions:
+     - Adapt follow-up questions based on mood,
+     - Feedback on recurring patterns.
 
-4. **Tages-Summary & Rückblick**
-   - Nach dem Flow:
-     - Anzeige eines „Daily Snapshot“:
-       - Datum,
-       - Stimmung/Score,
-       - extrahierte 3 wichtigsten To-dos,
+4. **Daily Summary and Review**
+   - After the routine:
+     - Display a “Daily Snapshot” with:
+       - Date,
+       - Mood/score,
+       - The three most important extracted to-dos,
        - Happy Hour,
-       - „One thing you can control“,
-       - LLM-Zusammenfassung in 2–4 Sätzen.
-   - In einer History-Liste aufrufbar („Vergangene Einträge“).
+       - “One thing you can control”,
+       - An LLM-generated summary in 2–4 sentences.
+   - Make snapshots accessible from a history list (“Past entries”).
 
-5. **Journal-Speicherung im Browser**
-   - Das Personal Journal ist browsergebunden und wird im `localStorage` des aktuellen Browser-Profils gespeichert.
-   - Ein versioniertes, namespaced JSON-Dokument enthält laufende Morning Check-ins und abgeschlossene Daily Snapshots. Der Personal Journal Store kapselt Zugriff, Autosave, Resume, Completion, Export und Löschung; UI-Komponenten greifen nicht direkt auf `window.localStorage` zu.
-   - Der Browser-local calendar day bestimmt den Check-in. Pro Tag gibt es höchstens einen abgeschlossenen Daily Snapshot; abgeschlossene Snapshots bleiben unveränderlich.
-   - `localStorage` ist keine Synchronisierung, Verschlüsselung oder Authentifizierung. Ein Wechsel von Browser, Gerät oder Browser-Profil stellt das Journal nicht automatisch bereit.
+5. **Browser-Based Journal Storage**
+   - The Personal Journal is browser-specific and stored in `localStorage` for the current browser profile.
+   - A versioned, namespaced JSON document contains unfinished Morning Check-ins and completed Daily Snapshots. The Personal Journal Store encapsulates access, autosave, resume, completion, export, and deletion; UI components do not access `window.localStorage` directly.
+   - The browser-local calendar day determines the check-in. There can be at most one completed Daily Snapshot per day; completed snapshots remain immutable.
+   - `localStorage` does not provide synchronization, encryption, or authentication. Switching browsers, devices, or browser profiles does not make the journal available automatically.
 
-6. **Später: Integrationen**
-   - Optionale Webhooks/Events, z.B.:
-     - Trigger an Home Assistant („Morning Check-in done“),
-     - E-Mail/Push-Reminder für den nächsten Morgen.
-   - Nicht Teil von v1, aber im Design berücksichtigt.
+6. **Future Integrations**
+   - Optional webhooks/events, for example:
+     - Trigger in Home Assistant (“Morning Check-in done”),
+     - Email/push reminder for the next morning.
+   - Not part of v1, but considered in the design.
 
 ---
 
-## Projektstruktur
+## Project Structure
 
-Monorepo mit Frontend (Next.js) und Backend (FastAPI).
+A monorepo with a frontend (Next.js) and backend (FastAPI).
 
 ```text
 gratitude-morning-coach/
-├── frontend/                # Next.js App
+├── frontend/                # Next.js app
 │   ├── app/
 │   │   ├── layout.tsx
-│   │   ├── page.tsx         # Landing + Start-Button für Routine
+│   │   ├── page.tsx         # Landing page + start button for the routine
 │   │   ├── journal/
-│   │   │   └── page.tsx     # History-Ansicht
-│   │   └── api/             # (optional) Proxy-Routen zum Backend
+│   │   │   └── page.tsx     # History view
+│   │   └── api/             # (optional) Proxy routes to the backend
 │   ├── components/
 │   │   ├── BreathTimer.tsx
 │   │   ├── QuestionStep.tsx
@@ -80,7 +80,7 @@ gratitude-morning-coach/
 │   │   ├── SummaryCard.tsx
 │   │   └── Layout.tsx
 │   ├── lib/
-│   │   └── api.ts           # Helper für REST-Calls zum FastAPI-Backend
+│   │   └── api.ts           # Helper for REST calls to the FastAPI backend
 │   ├── styles/
 │   │   └── globals.css
 │   ├── next.config.mjs
@@ -95,25 +95,25 @@ gratitude-morning-coach/
 │   │   └── coach_summary.py # Replaceable server-side generator
 │   ├── pyproject.toml       # Python dependencies managed and locked by uv
 │   ├── uv.lock
-│   └── uvicorn_app.py       # z.B. `uv run uvicorn app.main:app --reload`
+│   └── uvicorn_app.py       # e.g. `uv run uvicorn app.main:app --reload`
 │
-└── README.md                # Projektbeschreibung & Setup
+└── README.md                # Project overview and setup
 ```
 
 ---
 
-## Historisches API-Schema (vor der Browser-Migration)
+## Historical API Schema (Before the Browser Migration)
 
-Die folgenden `/session`- und `/journal`-Beispiele beschreiben die frühere,
-backend-persistierte Architektur. Sie sind keine aktuellen Endpunkte. Das
-heutige Backend ist stateless und bietet nur Health Check und die optionale
-Coach-Summary-Erzeugung; Morning Check-ins, Daily Snapshots, History und
-Journal Export liegen im browser-local Personal Journal Store.
+The following `/session` and `/journal` examples describe the former
+backend-persisted architecture. They are not current endpoints. The current
+backend is stateless and provides only a Health Check and optional Coach
+Summary generation; Morning Check-ins, Daily Snapshots, history, and Journal
+Export are handled by the browser-local Personal Journal Store.
 
 ### 1. `POST /session/start`
 
-**Beschreibung:**  
-Erzeugt eine neue Journaling-Session für heute.
+**Description:**
+Creates a new journaling session for today.
 
 **Request (JSON):**
 ```json
@@ -126,7 +126,7 @@ Erzeugt eine neue Journaling-Session für heute.
 **Response (JSON):**
 ```json
 {
-  "session_id": "uuid-oder-kurzid",
+  "session_id": "uuid-or-short-id",
   "breath_instructions": "Breathe in for 4 seconds, out for 6 seconds...",
   "breath_duration_seconds": 30,
   "first_question": {
@@ -139,13 +139,13 @@ Erzeugt eine neue Journaling-Session für heute.
 
 ### 2. `POST /session/answer`
 
-**Beschreibung:**  
-Speichert eine Antwort und gibt entweder die nächste Frage oder das Summary zurück.
+**Description:**
+Saves an answer and returns either the next question or the summary.
 
 **Request (JSON):**
 ```json
 {
-  "session_id": "uuid-oder-kurzid",
+  "session_id": "uuid-or-short-id",
   "question_id": "q1",
   "answer": {
     "rating": 3,
@@ -154,7 +154,7 @@ Speichert eine Antwort und gibt entweder die nächste Frage oder das Summary zur
 }
 ```
 
-**Antwort-Typ A – weitere Frage:**
+**Response Type A — another question:**
 ```json
 {
   "status": "next_question",
@@ -166,7 +166,7 @@ Speichert eine Antwort und gibt entweder die nächste Frage oder das Summary zur
 }
 ```
 
-**Antwort-Typ B – Flow fertig, Summary erzeugt:**
+**Response Type B — routine complete, summary generated:**
 ```json
 {
   "status": "completed",
@@ -181,15 +181,15 @@ Speichert eine Antwort und gibt entweder die nächste Frage oder das Summary zur
 }
 ```
 
-Der LLM-Call passiert im Backend, sobald die letzte Frage (q6) beantwortet ist.
+The LLM call happens in the backend once the last question (q6) is answered.
 
 ### 3. `GET /journal` (History)
 
-**Optional für v1, aber leicht mitzunehmen.**
+**Optional for v1, but easy to include.**
 
 **Query-Parameter:**
 - `user_id` (optional)
-- `limit`, `offset` (oder Paging mit `page`)
+- `limit`, `offset` (or pagination with `page`)
 
 **Response (JSON):**
 ```json
@@ -219,22 +219,22 @@ Der LLM-Call passiert im Backend, sobald die letzte Frage (q6) beantwortet ist.
 
 ---
 
-## Historische Architektur: Journal-Speicher mit TinyDB
+## Historical Architecture: Journal Storage with TinyDB
 
-Die folgenden Abschnitte dokumentieren ausschließlich die ursprüngliche Architektur und das Format bestehender Installationen. TinyDB ist **nicht** mehr die laufende Journal-Persistenz. Nach der Umstellung besitzt der Backend-Prozess keine Journal-Datei und keinen Journal-CRUD-Endpunkt mehr; Health Check und stateless Coach Summary bleiben erhalten.
+The following sections document only the original architecture and the format used by existing installations. TinyDB is **no longer** used for active journal persistence. After migration, the backend process has no journal file or journal CRUD endpoint; the Health Check and stateless Coach Summary remain.
 
-Für die ursprüngliche v1 war **TinyDB** vorgesehen:
+The original v1 design used **TinyDB**:
 
-- reines Python, keine Server-Installation,
-- speichert als JSON-Datei,
-- dokument-orientiertes NoSQL,
-- CRUD + Query-Unterstützung out-of-the-box. [web:98][web:100][web:103]
+- Pure Python with no server installation,
+- Stores data in a JSON file,
+- Document-oriented NoSQL,
+- Built-in CRUD and query support. [web:98][web:100][web:103]
 
-### Datenmodell (Konzeptuell)
+### Data Model (Conceptual)
 
-**Datei:** `journal.json` (TinyDB-Datei)
+**File:** `journal.json` (TinyDB file)
 
-**Dokumentstruktur für einen Eintrag:**
+**Document structure for an entry:**
 
 ```json
 {
@@ -258,7 +258,7 @@ Für die ursprüngliche v1 war **TinyDB** vorgesehen:
 }
 ```
 
-### Zugriff im historischen Backend (FastAPI) – grobe Skizze
+### Access in the Historical Backend (FastAPI) — Rough Sketch
 
 ```python
 # backend/app/db.py
@@ -268,7 +268,7 @@ db = TinyDB("journal.json")
 JournalEntry = Query()
 
 def create_session(user_id: str | None, date: str) -> str:
-    # generate session_id (z.B. uuid4)
+    # generate session_id (e.g. uuid4)
     ...
 
 def save_answer(session_id: str, question_id: str, answer: dict) -> None:
@@ -291,19 +291,19 @@ def finalize_session(session_id: str, mood_score: int, happy_hour: str,
     )
 
 def get_entries(user_id: str | None = None, limit: int = 20, offset: int = 0):
-    # einfache Filterung mit TinyDB-Query API
+    # simple filtering with the TinyDB query API
     ...
 ```
 
-TinyDB war für den kleinen Datensatz und die ursprüngliche selbst gehostete Architektur geeignet. Bestehende Dateien werden nicht automatisch importiert. Die einmalige Entwickler-Migration ist in `docs/runbooks/tinydb-to-browser-storage.md` beschrieben.
+TinyDB was suitable for the small dataset and the original self-hosted architecture. Existing files are not imported automatically. The one-time developer migration is described in `docs/runbooks/tinydb-to-browser-storage.md`.
 
 ---
 
 ## Next Steps
 
-- Browser-local Personal Journal Store und lokale Morning-Check-in-Oberflächen implementieren.
-- Das stateless FastAPI-Backend mit `uv` starten; `OPENAI_API_KEY` bleibt ausschließlich in der Backend-Umgebung.
-- Die einmalige Übernahme bestehender TinyDB-Dateien vor dem Upgrade gemäß `docs/runbooks/tinydb-to-browser-storage.md` durchführen.
+- Implement the browser-local Personal Journal Store and local Morning Check-in surfaces.
+- Run the stateless FastAPI backend with `uv`; keep `OPENAI_API_KEY` exclusively in the backend environment.
+- Before upgrading, perform the one-time transfer of existing TinyDB files as described in `docs/runbooks/tinydb-to-browser-storage.md`.
 
 ```markdown
 ```

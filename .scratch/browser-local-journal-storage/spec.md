@@ -4,13 +4,13 @@ Status: ready-for-agent
 
 ## Problem Statement
 
-Das Personal Journal wird derzeit im FastAPI-Backend mit TinyDB gespeichert. Dadurch benötigt die Anwendung für ein einzelnes privates Browser-Profil einen dauerhaft beschreibbaren Server-Datenträger und einen zustandsbehafteten Backend-Prozess. Das widerspricht dem inzwischen gewählten Modell: User Profile und lokale Nutzung sollen an den Browser gebunden sein, während nur die optionale Coach Summary serverseitig über OpenAI erzeugt wird.
+The Personal Journal is currently stored in the FastAPI backend using TinyDB. This requires a persistently writable server volume and a stateful backend process for a single private browser profile. That conflicts with the chosen model: the User Profile and local usage are tied to the browser, while only the optional Coach Summary is generated server-side through OpenAI.
 
 ## Solution
 
-Verlagere die vollständige Personal-Journal-Persistenz in den `localStorage` des Browsers. Der Browser speichert dort laufende Morning Check-ins, abgeschlossene Daily Snapshots, Antworten, Coach-Summary-Status und Journal-Daten. Das Frontend verwendet dafür einen testbaren Personal-Journal-Store und behält die bestehende API-Client-Seam gegenüber den UI-Komponenten bei.
+Move all Personal Journal persistence to the browser's `localStorage`. The browser stores unfinished Morning Check-ins, completed Daily Snapshots, answers, Coach Summary status, and journal data. The frontend uses a testable Personal Journal Store and retains the existing API-client seam for UI components.
 
-Das FastAPI-Backend wird stateless. Es verwaltet keine TinyDB mehr und enthält keine Journal-History, keine Check-in-Zustände und keine Exportdaten. Es stellt weiterhin einen Health Check und eine serverseitige Coach-Summary-API bereit. Diese API erhält ausschließlich die aktuellen Antworten und die erkannte Zielsprache, liest `OPENAI_API_KEY` aus einer Backend-Umgebungsvariable und gibt eine Coach Summary oder einen kontrollierten Fehler bzw. leeren Erfolg zurück. Der OpenAI-Schlüssel wird niemals an den Browser übertragen.
+The FastAPI backend becomes stateless. It no longer uses TinyDB and does not contain journal history, check-in state, or export data. It continues to provide a Health Check and a server-side Coach Summary API. This API receives only the current answers and detected target language, reads `OPENAI_API_KEY` from a backend environment variable, and returns a Coach Summary or a controlled error/empty result. The OpenAI key is never sent to the browser.
 
 ## User Stories
 

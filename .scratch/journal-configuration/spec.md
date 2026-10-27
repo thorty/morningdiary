@@ -1,16 +1,16 @@
-# Journal-Konfiguration
+# Journal Configuration
 
 **Status:** ready-for-agent
 
 ## Problem Statement
 
-Der Journal Owner kann weder die automatische Coach Summary für neue Daily Snapshots lokal deaktivieren noch die gesamte Personal-Journal-Historie samt angefangenen Morning Check-ins zurücksetzen. Die Konfiguration soll ohne eigene Seite schnell erreichbar und bewusst einfach bleiben.
+The Journal Owner cannot currently disable automatic Coach Summary generation for new Daily Snapshots or reset the entire Personal Journal history, including unfinished Morning Check-ins. Configuration should be easy to access without requiring a separate page and should remain intentionally simple.
 
 ## Solution
 
-Die Seitennavigation erhält ein einklappbares Konfigurationsmenü. Es enthält einen lokal gespeicherten Schalter, der steuert, ob künftig abgeschlossene Morning Check-ins eine Coach Summary anfordern, sowie eine Aktion zum unwiderruflichen Löschen der gesamten Personal-Journal-Historie einschließlich unfertiger Morning Check-ins. Eine native Browser-Bestätigung schützt vor versehentlichem Löschen.
+Add a collapsible configuration menu to the page navigation. It contains a locally persisted toggle that controls whether completed Morning Check-ins request a Coach Summary in the future, and an action to permanently delete the entire Personal Journal history, including unfinished Morning Check-ins. A native browser confirmation helps prevent accidental deletion.
 
-Der OpenAI-API-Key bleibt ausschließlich serverseitig in `backend/.env`; er wird nicht im Frontend gespeichert oder angezeigt.
+Keep the OpenAI API key exclusively on the server in `backend/.env`; do not store or display it in the frontend.
 
 ## User Stories
 
@@ -33,7 +33,7 @@ Der OpenAI-API-Key bleibt ausschließlich serverseitig in `backend/.env`; er wir
 - Extend Morning Check-in completion so the frontend can opt out of Coach Summary generation for that completion. A disabled Summary leaves the Daily Snapshot complete without invoking the Coach Summary Generator.
 - Add one Personal-Journal-wide deletion operation that removes every persisted Morning Check-in record, regardless of whether it is unfinished or completed.
 - Invoke deletion only after `window.confirm` returns true, then clear visible frontend state.
-- Keep the Stimmungsverlauf and removal of the optional free-text response label out of scope.
+- Keep the Mood Trend and removal of the optional free-text response label out of scope.
 
 ## Testing Decisions
 
@@ -48,7 +48,7 @@ Der OpenAI-API-Key bleibt ausschließlich serverseitig in `backend/.env`; er wir
 - Editing or storing the OpenAI API key in the browser.
 - Per-snapshot deletion, restoration, undo, or archival.
 - Changing existing Coach Summaries.
-- Changing the Stimmungsverlauf.
+- Changing the Mood Trend.
 - Visual redesign beyond the compact configuration menu.
 
 ## Further Notes

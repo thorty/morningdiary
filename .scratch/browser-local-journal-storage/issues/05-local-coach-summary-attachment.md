@@ -1,17 +1,17 @@
 # 05 — Coach Summary am lokalen Daily Snapshot
 
-**What to build:** Nach der lokalen Completion erhält ein Daily Snapshot optional eine Coach Summary. Der Frontend-Store speichert Erfolg, unavailable-Status und Retry-Zustand lokal. Ein Fehler beim stateless Backend verliert weder Completion noch Antworten.
+**What to build:** After local completion, a Daily Snapshot can optionally receive a Coach Summary. The frontend store persists success, unavailable status, and retry state locally. A stateless backend failure must not lose the completion or its answers.
 
-**Blocked by:** 02 — Browser-local Storage und Morning Check-in; 03 — Stateless Coach Summary API
+**Blocked by:** 02 — Browser-Local Storage and Morning Check-in; 03 — Stateless Coach Summary API
 
 **Status:** ready-for-agent
 
-- [ ] Ein nicht-leerer Morning Check-in wird lokal abgeschlossen, bevor die Coach-Summary-Anfrage gestartet wird.
-- [ ] Bei erfolgreicher Generierung wird der Text am bestehenden lokalen Daily Snapshot gespeichert.
-- [ ] Bei deaktivierter Coach Summary wird lokal `not_requested` gespeichert und kein Backend-Aufruf ausgeführt.
-- [ ] Ein Blank Check-in erzeugt keinen Backend-Aufruf und keine Coach Summary.
-- [ ] Bei Timeout, Exception, unavailable-Response oder leerem Text bleibt der Daily Snapshot vollständig erhalten und erhält die bestehende deutsche unavailable-Notiz.
-- [ ] Ein fehlgeschlagener Summary-Versuch markiert den lokalen Snapshot als retrybar, sofern die fachlichen Voraussetzungen erfüllt sind.
-- [ ] Ein Retry aktualisiert nur den bestehenden Daily Snapshot und erzeugt keinen zweiten Snapshot für denselben Tag.
-- [ ] Die aktuelle Sprachdetektion und der Fallback auf Deutsch bei gemischten Antworten bleiben sichtbar korrekt.
-- [ ] Frontend-Tests prüfen Success, Opt-out, Blank Check-in, unavailable, Fehler, Retry und den Request-Inhalt ohne Journal-Historie.
+- [ ] A non-empty Morning Check-in is completed locally before starting the Coach Summary request.
+- [ ] On successful generation, the text is saved to the existing local Daily Snapshot.
+- [ ] When Coach Summary generation is disabled, save `not_requested` locally and do not make a backend request.
+- [ ] A Blank Check-in makes no backend request and generates no Coach Summary.
+- [ ] On timeout, exception, unavailable response, or empty text, preserve the complete Daily Snapshot and attach the existing German unavailable note.
+- [ ] A failed summary attempt marks the local snapshot as retryable when domain requirements allow it.
+- [ ] A retry updates only the existing Daily Snapshot and does not create a second snapshot for the same day.
+- [ ] Preserve the current language detection and German fallback for mixed-language answers.
+- [ ] Frontend tests verify success, opt-out, Blank Check-in, unavailable status, errors, retry, and request content without journal history.

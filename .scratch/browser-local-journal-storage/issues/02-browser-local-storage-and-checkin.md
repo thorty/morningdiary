@@ -1,19 +1,19 @@
-# 02 — Browser-local Storage und Morning Check-in
+# 02 — Browser-Local Storage and Morning Check-in
 
-**What to build:** Der Journal Owner kann einen Morning Check-in vollständig browser-lokal durchführen. Antworten werden sofort gespeichert, unfertige Check-ins überleben einen Refresh und werden am selben browser-local calendar day fortgesetzt. Restart, Blank Check-in, tägliche Eindeutigkeit und die Unveränderlichkeit abgeschlossener Daily Snapshots bleiben erhalten.
+**What to build:** The Journal Owner can complete a Morning Check-in entirely in browser-local storage. Answers are saved immediately, unfinished check-ins survive a page refresh, and the check-in resumes on the same browser-local calendar day. Restart, Blank Check-in, daily uniqueness, and the immutability of completed Daily Snapshots are preserved.
 
-**Blocked by:** 01 — Dokumentation und manuelles Migrations-Runbook
+**Blocked by:** 01 — Documentation and Manual Migration Runbook
 
 **Status:** ready-for-agent
 
-- [ ] Ein versioniertes, namespaced Browser-Storage-Dokument kann Morning Check-ins und abgeschlossene Daily Snapshots speichern.
-- [ ] Eine testbare Personal-Journal-Store-Seam kapselt Laden, Erstellen, Antworten speichern, Restart, Completion, Finden, Auflisten, Löschen und Exportdaten.
-- [ ] UI-Komponenten greifen nicht direkt auf `window.localStorage` zu.
-- [ ] Der Store funktioniert ohne Fehler bei Server-Rendering, Modulimport und Tests ohne `window`.
-- [ ] Der Store erstellt oder resumed den Check-in anhand des vom Browser gelieferten Datums.
-- [ ] Jede Antwort wird unmittelbar persistiert und ein Refresh stellt den aktuellen Fortschritt wieder her.
-- [ ] Ein unfertiger Check-in kann neu gestartet werden; ein abgeschlossener Daily Snapshot kann nicht neu gestartet oder überschrieben werden.
-- [ ] Ein Blank Check-in kann ohne Backend-Aufruf abgeschlossen werden.
-- [ ] Mood-Antworten akzeptieren weiterhin nur `null` oder die Werte 1 bis 5; Fragen 2 bis 6 akzeptieren nur `null` oder Freitext.
-- [ ] Pro browser-local calendar day existiert höchstens ein abgeschlossener Daily Snapshot.
-- [ ] Der bestehende Morning-Check-in-Journey-Test und Store-Contract-Tests decken Create, Resume, Autosave, Restart, Completion, Immutability und Storage-Fehler ab.
+- [ ] A versioned, namespaced browser-storage document can store Morning Check-ins and completed Daily Snapshots.
+- [ ] A testable Personal Journal Store seam encapsulates loading, creation, saving answers, restart, completion, lookup, listing, deletion, and export data.
+- [ ] UI components do not access `window.localStorage` directly.
+- [ ] The store works without errors during server rendering, module import, and tests without `window`.
+- [ ] The store creates or resumes a check-in based on the date supplied by the browser.
+- [ ] Each answer is persisted immediately, and a refresh restores the current progress.
+- [ ] An unfinished check-in can be restarted; a completed Daily Snapshot cannot be restarted or overwritten.
+- [ ] A Blank Check-in can be completed without a backend request.
+- [ ] Mood answers continue to accept only `null` or values 1 through 5; questions 2 through 6 accept only `null` or free text.
+- [ ] At most one completed Daily Snapshot exists for each browser-local calendar day.
+- [ ] The existing Morning Check-in journey test and store contract tests cover creation, resume, autosave, restart, completion, immutability, and storage errors.

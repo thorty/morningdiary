@@ -1,61 +1,59 @@
-# Feature-Workflow mit Matt-Pocock-Skills
+# Feature Workflow with Matt Pocock Skills
 
-Dieser Leitfaden beschreibt den Main Flow für Änderungen an Morningcoach. Die Skills unterstützen den Ablauf; sie ersetzen weder die Entscheidungen des Maintainers noch die Repo-Konventionen.
+This guide describes the main flow for changes to Morningcoach. The skills support the process; they do not replace maintainer decisions or repository conventions.
 
-## Main Flow: Idee bis Umsetzung
+## Main Flow: From Idea to Implementation
 
-### 1. Repo-Kontext aufnehmen
+### 1. Understand the repository context
 
-Vor einer Änderung:
+Before making a change:
 
-- `CONTEXT.md` und die für das Thema relevanten ADRs in `docs/adr/` lesen.
-- Den aktuellen Code und vorhandene Tests erkunden, bevor eine Lösung festgelegt wird.
-- Die Begriffe aus `CONTEXT.md` verwenden. `docs/agents/domain.md` beschreibt, wie die Domain-Dokumente zu verwenden sind.
+- Read `GLOSSARY.md` and the ADRs in `docs/adr/` relevant to the task.
+- Explore the current code and existing tests before deciding on a solution.
+- Use the terms defined in `GLOSSARY.md`. `docs/agents/domain.md` explains how to use the domain documents.
 
-### 2. Idee schärfen — `/grill-with-docs`
+### 2. Refine the idea — `/grill-with-docs`
 
-Für neue Features oder größere Änderungen zuerst `/grill-with-docs` verwenden. Der Skill führt durch die offenen Produkt- und Designfragen und hält geklärte Begriffe bzw. Entscheidungen in den Domain-Dokumenten fest.
+For new features or larger changes, start with `/grill-with-docs`. The skill works through open product and design questions and records resolved terminology and decisions in the domain documents.
 
-Für eine konkrete Verhaltens- oder UI-Frage kann `/prototype` helfen, bevor die Lösung spezifiziert wird. Bei Vorhaben, deren offene Entscheidungen nicht in eine Sitzung passen, zuerst mit `/wayfinder` eine Map und Entscheidungstickets anlegen. Das lokale Map- und Ticketformat ist in `docs/agents/issue-tracker.md` beschrieben.
+For a specific behavior or UI question, use `/prototype` to explore a concrete option before writing the spec. For efforts with more open decisions than can be resolved in one session, start with `/wayfinder` to create a map and decision tickets. The local map and ticket format is described in `docs/agents/issue-tracker.md`.
 
-### 3. Abgestimmte Diskussion in eine Spec überführen — `/to-spec`
+### 3. Turn the agreed discussion into a spec — `/to-spec`
 
-`/to-spec` fasst die bereits geführte Diskussion zusammen; es ist kein Ersatz für die Klärung offener Fragen. Der Skill prüft den Codebase-Kontext, schlägt Test-Seams vor und fragt nach deren Bestätigung.
+`/to-spec` synthesizes the discussion so far; it does not replace resolving open questions. The skill checks the codebase context, proposes test seams, and asks you to confirm them.
 
-Die Spec wird unter `.scratch/<feature-slug>/spec.md` angelegt. Sie beschreibt Problem, Lösung, User Stories, Implementierungs- und Testentscheidungen sowie den Out-of-Scope. Die Spec erhält den Status `ready-for-agent`, wenn sie zur Aufteilung bereit ist.
+Create the spec at `.scratch/<feature-slug>/spec.md`. It describes the problem, solution, user stories, implementation and testing decisions, and out-of-scope items. Set its status to `ready-for-agent` when it is ready to be broken down into tickets.
 
-### 4. Spec in umsetzbare Tickets aufteilen — `/to-tickets`
+### 4. Break the spec into actionable tickets — `/to-tickets`
 
-`/to-tickets` zerlegt die abgestimmte Spec in kleine, vollständige und einzeln überprüfbare Umsetzungsscheiben. Erst Granularität und Abhängigkeiten gemeinsam prüfen und freigeben, dann veröffentlichen.
+`/to-tickets` breaks the agreed spec into small, complete, independently verifiable implementation slices. Review and approve the granularity and dependencies before publishing the tickets.
 
-Für den lokalen Markdown-Tracker gilt:
+For the local Markdown tracker:
 
-- Pro Ticket eine Datei unter `.scratch/<feature-slug>/issues/`, beginnend mit `01-`.
-- Abhängigkeiten als `Blocked by` aufführen; Tickets ohne echte Voraussetzung bleiben unabhängig.
-- Für den Status die Repo-Konventionen aus `docs/agents/triage-labels.md` verwenden.
-- Das vollständige Dateiformat und die weiteren Tracker-Regeln stehen in `docs/agents/issue-tracker.md`.
+- Create one file per ticket under `.scratch/<feature-slug>/issues/`, starting with `01-`.
+- Record dependencies with `Blocked by`; keep tickets independent when they have no actual prerequisites.
+- Use the repository's status conventions from `docs/agents/triage-labels.md`.
+- See `docs/agents/issue-tracker.md` for the full file format and other tracker conventions.
 
-### 5. Tickets einzeln umsetzen — `/implement`
+### 5. Implement tickets one at a time — `/implement`
 
-Ein Ticket anhand seiner Datei referenzieren, zum Beispiel `/implement .scratch/<feature-slug>/issues/01-<slug>.md`. In Abhängigkeitsreihenfolge arbeiten: jeweils nur an Tickets weiterarbeiten, deren Blocker erledigt sind.
+Pass a ticket's file path to the skill, for example `/implement .scratch/<feature-slug>/issues/01-<slug>.md`. This gives the skill a specific task and its acceptance criteria. Work in dependency order: start only on tickets whose blockers are complete.
 
-Die Umsetzung erfolgt in kleinen vertikalen Scheiben mit Tests an den vereinbarten öffentlichen Seams. Bei testgetriebener Arbeit gelten die Red-Green-Regeln aus `/tdd`. Vor dem Abschluss die passenden Tests und Typprüfungen ausführen und die Änderung gegen Ticket und Spec prüfen.
+The skill implements the ticket in small vertical slices, uses `/tdd` where appropriate, runs relevant tests and type checks, and reviews the change with `/code-review`. It then commits the work on the current branch. Commits are explicitly expected in this project. Before invoking the skill, confirm that the correct branch is active and that unrelated changes will not be included in the commit.
 
-**Commit beachten:** Die installierte `/implement`-Skill-Anleitung fordert einen Commit auf dem aktuellen Branch. Vor dem Aufruf deshalb festlegen, ob ein Commit gewünscht ist und ob zusätzliche Branch-Vorgaben gelten.
+### 6. Review the change — `/code-review`
 
-### 6. Änderung überprüfen — `/code-review`
+If the change was not reviewed as part of `/implement`, or additional changes were made afterward, run `/code-review` against an explicitly chosen comparison point, typically the base branch. The review assesses repository standards and spec compliance separately. Resolve any findings before considering the change complete.
 
-Nach der Umsetzung `/code-review` gegen einen ausdrücklich festgelegten Vergleichspunkt ausführen, typischerweise den Basisbranch. Die Prüfung betrachtet Repo-Standards und Spec-Erfüllung getrennt. Bei Findings erst entscheiden und nötige Korrekturen umsetzen, bevor die Änderung als fertig gilt.
+## Supporting workflows
 
-## Nebenpfade
+- **Bug or unexpected behavior:** Use `/diagnosing-bugs` to establish the cause and reproduce the issue; create a spec and tickets afterward if the work is substantial.
+- **Backlog review:** Use `/triage`. The five status roles are mapped to the repository's labels in `docs/agents/triage-labels.md`.
+- **Architecture or domain terminology:** Use `/domain-modeling` and record significant architecture decisions in `docs/adr/`.
+- **Small, well-scoped change:** Do not force the full workflow. Check the context and scope, implement the change directly, and run appropriate tests.
 
-- **Bug oder unerwartetes Verhalten:** mit `/diagnosing-bugs` Ursache und Reproduktion ermitteln; bei größerem Umfang anschließend Spec und Tickets anlegen.
-- **Backlog sichten:** `/triage` verwenden. Die fünf Statusrollen sind in `docs/agents/triage-labels.md` auf die Repo-Bezeichnungen abgebildet.
-- **Architektur- oder Begriffsarbeit:** `/domain-modeling` nutzen; wesentliche Architekturentscheidungen in `docs/adr/` festhalten.
-- **Kleine, klar begrenzte Änderung:** den vollständigen Flow nicht künstlich durchlaufen. Kontext prüfen, Umfang abgleichen, gezielt umsetzen und passend testen.
+## Storage and visibility
 
-## Ablage und Sichtbarkeit
+Specs, implementation tickets, and Wayfinder artifacts belong under `.scratch/`. Whether these files are shared through Git depends on whether `.scratch/` is ignored in the current repository state. Before leaving or switching branches, check that important local tracker artifacts are versioned or otherwise backed up.
 
-Specs, Umsetzungstickets und Wayfinder-Artefakte gehören nach `.scratch/`. Ob diese Dateien im Git-Repository geteilt werden, hängt davon ab, ob `.scratch/` im jeweiligen Arbeitsstand von Git ignoriert wird. Vor dem Verlassen oder Wechseln des Branches prüfen, ob wichtige lokale Tracker-Artefakte versioniert oder anderweitig gesichert sind.
-
-Die Skills selbst können benutzerspezifisch installiert sein. Dieser Leitfaden dokumentiert den Ablauf, installiert oder aktualisiert aber keine Skills. Verfügbarkeit und Version der Skills bei anderen Mitwirkenden separat sicherstellen.
+The skills may be installed per user. This guide documents the workflow but does not install or update skills. Ensure that other contributors have the skills available and use a compatible version.
