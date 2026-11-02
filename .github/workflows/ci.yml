@@ -152,7 +152,7 @@ jobs:
           push: false
 
       - name: Scan backend image and create SARIF report
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: morningcoach-backend:${{ github.sha }}
           format: sarif
@@ -164,7 +164,7 @@ jobs:
       - name: Fail on fixed backend HIGH or CRITICAL vulnerabilities
         id: backend-vulnerability-gate
         continue-on-error: true
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: morningcoach-backend:${{ github.sha }}
           format: table
@@ -192,7 +192,7 @@ jobs:
 
       - name: Scan frontend image and create SARIF report
         if: always()
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: morningcoach-frontend:${{ github.sha }}
           format: sarif
@@ -205,7 +205,7 @@ jobs:
         if: always()
         id: frontend-vulnerability-gate
         continue-on-error: true
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: morningcoach-frontend:${{ github.sha }}
           format: table
