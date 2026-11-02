@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] Backend lint and test coverage tools are available through the project’s existing development workflow.
-- [ ] Frontend lint and v8 coverage tools are available through npm scripts.
-- [ ] Lockfiles reflect the new tooling, and both services’ existing type-check and test commands continue to work.
-- [ ] Coverage is reported without a pass/fail threshold.
+- [x] Backend lint and test coverage tools are available through the project’s existing development workflow.
+- [x] Frontend lint and v8 coverage tools are available through npm scripts.
+- [x] Lockfiles reflect the new tooling, and both services’ existing type-check and test commands continue to work.
+- [x] Coverage is reported without a pass/fail threshold.

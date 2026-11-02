@@ -10,5 +10,9 @@ Browser-local storage is device- and browser-profile-specific. It is not synchro
 
 - Install dependencies: `npm install`
 - Start app: `npm run dev`
+- Run lint: `npm run lint`
 - Run typecheck: `npm run typecheck`
 - Run tests: `npm run test`
+- Run tests with v8 coverage: `npm run test:coverage`
+
+Coverage is reported without a minimum threshold.
