@@ -124,6 +124,7 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: ${{ github.actor != 'dependabot[bot]' }}
         with:
           args: --log-opts=--all --redact --exit-code=1
 
@@ -173,7 +174,7 @@ jobs:
           exit-code: "1"
 
       - name: Upload backend scan results to GitHub Security
-        if: always() && hashFiles('trivy-backend.sarif') != ''
+        if: always() && github.actor != 'dependabot[bot]' && hashFiles('trivy-backend.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-backend.sarif
@@ -214,7 +215,7 @@ jobs:
           exit-code: "1"
 
       - name: Upload frontend scan results to GitHub Security
-        if: always() && hashFiles('trivy-frontend.sarif') != ''
+        if: always() && github.actor != 'dependabot[bot]' && hashFiles('trivy-frontend.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-frontend.sarif
