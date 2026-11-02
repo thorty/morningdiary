@@ -126,3 +126,107 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: --log-opts=--all --redact --exit-code=1
+
+  docker:
+    name: docker
+    needs:
+      - backend
+      - frontend
+      - secrets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build backend smoke-test image without publishing
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          tags: morningcoach-backend:${{ github.sha }}
+          load: true
+          push: false
+
+      - name: Scan backend image and create SARIF report
+        uses: aquasecurity/trivy-action@0.36.0
+        with:
+          image-ref: morningcoach-backend:${{ github.sha }}
+          format: sarif
+          output: trivy-backend.sarif
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: "0"
+
+      - name: Fail on fixed backend HIGH or CRITICAL vulnerabilities
+        id: backend-vulnerability-gate
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.36.0
+        with:
+          image-ref: morningcoach-backend:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: "1"
+
+      - name: Upload backend scan results to GitHub Security
+        if: always() && hashFiles('trivy-backend.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-backend.sarif
+          category: trivy-backend
+
+      - name: Build frontend smoke-test image without publishing
+        if: always()
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          tags: morningcoach-frontend:${{ github.sha }}
+          load: true
+          push: false
+
+      - name: Scan frontend image and create SARIF report
+        if: always()
+        uses: aquasecurity/trivy-action@0.36.0
+        with:
+          image-ref: morningcoach-frontend:${{ github.sha }}
+          format: sarif
+          output: trivy-frontend.sarif
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: "0"
+
+      - name: Fail on fixed frontend HIGH or CRITICAL vulnerabilities
+        if: always()
+        id: frontend-vulnerability-gate
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.36.0
+        with:
+          image-ref: morningcoach-frontend:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: "1"
+
+      - name: Upload frontend scan results to GitHub Security
+        if: always() && hashFiles('trivy-frontend.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-frontend.sarif
+          category: trivy-frontend
+
+      - name: Fail the Docker job if either image has a blocking vulnerability
+        if: always()
+        env:
+          BACKEND_SCAN_OUTCOME: ${{ steps.backend-vulnerability-gate.outcome }}
+          FRONTEND_SCAN_OUTCOME: ${{ steps.frontend-vulnerability-gate.outcome }}
+        run: |
+          if [ "$BACKEND_SCAN_OUTCOME" = "failure" ] || [ "$FRONTEND_SCAN_OUTCOME" = "failure" ]; then
+            echo "A Docker image contains a fixed HIGH or CRITICAL vulnerability."
+            exit 1
+          fi
