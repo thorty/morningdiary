@@ -9,6 +9,7 @@ import React from "react";
 
 import { HomeScreen } from "@/components/home-screen";
 import type { PersonalJournalApiClient } from "@/lib/api/client";
+import { dateDaysAgo, longDateDaysAgo } from "@/tests/date-fixtures";
 
 function makeMockClient(
   overrides: Partial<PersonalJournalApiClient> = {},
@@ -1178,7 +1179,7 @@ test("shows a mood trend for valid moods from the last 14 calendar days", async 
         listPersonalJournalSnapshots: async () => [
           {
             id: "latest",
-            browser_date: "2026-08-06",
+            browser_date: dateDaysAgo(1),
             status: "completed",
             answers: [5, null, null, null, null, null],
             next_question_number: null,
@@ -1186,7 +1187,7 @@ test("shows a mood trend for valid moods from the last 14 calendar days", async 
           },
           {
             id: "second",
-            browser_date: "2026-08-05",
+            browser_date: dateDaysAgo(2),
             status: "completed",
             answers: [2, null, null, null, null, null],
             next_question_number: null,
@@ -1194,7 +1195,7 @@ test("shows a mood trend for valid moods from the last 14 calendar days", async 
           },
           ...Array.from({ length: 10 }, (_, index) => ({
             id: `older-${index}`,
-            browser_date: `2026-07-${String(30 - index).padStart(2, "0")}`,
+            browser_date: dateDaysAgo(index + 15),
             status: "completed" as const,
             answers: [3, null, null, null, null, null],
             next_question_number: null,
@@ -1211,7 +1212,7 @@ test("shows a mood trend for valid moods from the last 14 calendar days", async 
     ).toBeInTheDocument();
   });
   expect(screen.getByRole("img", { name: /Stimmungsverlauf/ })).toHaveAccessibleName(
-    "Stimmungsverlauf: 2 von 5 am 5. August 2026; 5 von 5 am 6. August 2026",
+    `Stimmungsverlauf: 2 von 5 am ${longDateDaysAgo(2)}; 5 von 5 am ${longDateDaysAgo(1)}`,
   );
 });
 

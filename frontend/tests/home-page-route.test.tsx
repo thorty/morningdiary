@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import React from "react";
 
 import type { MorningCheckinResponse } from "@/lib/api/types";
+import { dateDaysAgo } from "@/tests/date-fixtures";
 
 const client = vi.hoisted(() => ({
   getHealth: vi.fn(async () => ({ status: "ok" as const })),
@@ -93,11 +94,11 @@ test("the home route resumes an unfinished Morning Check-in and limits the previ
     coach_summary: null,
   });
   client.listPersonalJournalSnapshots.mockResolvedValue(
-    ["14", "13", "12", "11"].map((day) => ({
-      id: `snapshot-${day}`,
-      browser_date: `2026-08-${day}`,
+    [4, 3, 2, 1].map((daysAgo) => ({
+      id: `snapshot-${daysAgo}`,
+      browser_date: dateDaysAgo(daysAgo),
       status: "completed" as const,
-      answers: [4, `Notiz ${day}`, null, null, null, null],
+      answers: [4, `Notiz ${daysAgo}`, null, null, null, null],
       next_question_number: null,
       coach_summary: null,
     })),

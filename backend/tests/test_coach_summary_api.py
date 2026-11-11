@@ -5,10 +5,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-import app.config as config
+from app import config
 from app.config import Settings
 from app.main import create_app
-
 
 ANSWERS = [4, "Ich bin dankbar fuer den ruhigen Morgen.", None, "Zeit fuer mich", None, "Den naechsten Schritt"]
 
@@ -22,8 +21,8 @@ class FakeSummaryGenerator:
     def generate(self, request: object) -> str | None:
         self.calls.append(
             {
-                "answers": getattr(request, "answers"),
-                "target_language": getattr(request, "target_language"),
+                "answers": getattr(request, "answers"),  # noqa: B009
+                "target_language": getattr(request, "target_language"),  # noqa: B009
             }
         )
         if self.raises:
