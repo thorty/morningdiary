@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** completed
 
 - [x] Backend lint and test coverage tools are available through the project’s existing development workflow.
 - [x] Frontend lint and v8 coverage tools are available through npm scripts.
