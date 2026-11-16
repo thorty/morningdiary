@@ -5,6 +5,7 @@ import { HomePage } from "@/components/home-page";
 import { PersonalJournalPage } from "@/components/personal-journal-page";
 import type { PersonalJournalApiClient } from "@/lib/api/client";
 import type { MorningCheckinResponse } from "@/lib/api/types";
+import { dateDaysAgo, longDateDaysAgo } from "@/tests/date-fixtures";
 
 function snapshot(day: string, answer: string, mood = 4): MorningCheckinResponse {
   return {
@@ -31,23 +32,22 @@ function apiClient(snapshots: MorningCheckinResponse[] = []): PersonalJournalApi
 }
 
 test("the Personal Journal route shows Daily Snapshots newest first with their mood and preview", async () => {
-  const client = apiClient([
-    snapshot("12", "Ältere Notiz", 2),
-    snapshot("14", "Neueste Notiz", 5),
-  ]);
+  const olderSnapshot = { ...snapshot("12", "Ältere Notiz", 2), browser_date: dateDaysAgo(5) };
+  const latestSnapshot = { ...snapshot("14", "Neueste Notiz", 5), browser_date: dateDaysAgo(3) };
+  const client = apiClient([olderSnapshot, latestSnapshot]);
 
   render(<PersonalJournalPage apiClient={client} />);
 
-  await screen.findByRole("article", { name: "Daily Snapshot vom 2026-08-14" });
+  await screen.findByRole("article", { name: `Daily Snapshot vom ${dateDaysAgo(3)}` });
   const snapshots = screen.getAllByRole("article");
   expect(snapshots.map((entry) => entry.getAttribute("aria-label"))).toEqual([
-    "Daily Snapshot vom 2026-08-14",
-    "Daily Snapshot vom 2026-08-12",
+    `Daily Snapshot vom ${dateDaysAgo(3)}`,
+    `Daily Snapshot vom ${dateDaysAgo(5)}`,
   ]);
   expect(screen.getByText("Stimmung 5 von 5 - Sehr gut")).toBeInTheDocument();
   expect(screen.getByText("Neueste Notiz")).toBeInTheDocument();
   expect(screen.getByRole("img", { name: /Stimmungsverlauf/ })).toHaveAccessibleName(
-    "Stimmungsverlauf: 2 von 5 am 12. August 2026; 5 von 5 am 14. August 2026",
+    `Stimmungsverlauf: 2 von 5 am ${longDateDaysAgo(5)}; 5 von 5 am ${longDateDaysAgo(3)}`,
   );
 });
 

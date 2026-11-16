@@ -7,13 +7,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.coach_summary import (
     CoachSummaryGenerator,
-    CoachSummaryRequest as GeneratorRequest,
     OpenAICoachSummaryGenerator,
     detect_predominant_answer_language,
 )
+from app.coach_summary import (
+    CoachSummaryRequest as GeneratorRequest,
+)
 from app.config import Settings
 from app.models import CoachSummaryRequest, CoachSummaryResponse, HealthResponse
-
 
 BACKEND_LOGGER_NAME = "morningcoach.backend"
 
@@ -71,7 +72,7 @@ def create_app(
                     target_language=target_language,
                 )
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 -- summary generation is best-effort.
             logger.error("coach_summary_generation_failed error_type=%s", type(exc).__name__)
             return CoachSummaryResponse(status="unavailable", summary=None)
 

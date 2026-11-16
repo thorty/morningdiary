@@ -9,8 +9,12 @@ The Personal Journal is stored in the frontend's browser-local `localStorage`. T
 - Install dependencies: `uv sync --dev`
 - Configure OpenAI: copy `.env.example` to `.env` and set `OPENAI_API_KEY`
 - Run service locally: `uv run uvicorn app.main:app --reload`
+- Run lint: `uv run ruff check .`
 - Run typecheck: `uv run mypy`
 - Run tests: `uv run pytest`
+- Run tests with coverage: `uv run pytest --cov=app --cov-report=term-missing`
+
+Coverage is reported without a minimum threshold.
 
 `OPENAI_API_KEY` is loaded only by the backend environment and is never sent to the browser. `POST /api/coach-summary` accepts only the six current answers and target language:
 
