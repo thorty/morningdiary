@@ -16,7 +16,7 @@
     "next": "^15.5.23",
     "p5": "^2.3.2",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "6.8.0",
@@ -24,7 +24,7 @@
     "@types/node": "24.3.0",
     "@types/p5": "^1.7.7",
     "@types/react": "18.3.24",
-    "@types/react-dom": "18.3.7",
+    "@types/react-dom": "19.3.0",
     "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.5.28",
