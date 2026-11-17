@@ -4,8 +4,8 @@
 
 **Blocked by:** 02: Add the core pull-request CI checks.
 
-**Status:** ready-for-agent
+**Status:** completed
 
-- [ ] The initial successful coverage measurement is used as the baseline.
-- [ ] A threshold is set slightly below the measured coverage.
-- [ ] Coverage below the threshold fails the relevant check; coverage at or above it passes.
+- [x] The initial successful coverage measurement is used as the baseline (backend 90%, frontend 89.15%).
+- [x] A threshold is set slightly below the measured coverage (85% for each service).
+- [x] Coverage below the threshold fails the relevant check; coverage at or above it passes.
