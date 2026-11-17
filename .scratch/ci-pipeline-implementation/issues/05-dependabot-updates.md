@@ -4,8 +4,8 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** completed
 
-- [ ] Weekly update pull requests are configured for uv, npm, both Dockerfiles, and GitHub Actions.
-- [ ] Dependabot pull requests run through the same applicable CI checks as other pull requests.
-- [ ] Auto-merge is not enabled.
+- [x] Weekly update pull requests are configured for uv, npm, both Dockerfiles, and GitHub Actions.
+- [x] Dependabot pull requests run through the same applicable CI checks as other pull requests.
+- [x] Auto-merge is not enabled.

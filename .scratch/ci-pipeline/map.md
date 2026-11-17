@@ -21,10 +21,6 @@ A written CI plan (`.scratch/ci-pipeline/spec.md`) that is ready to hand to an i
 - [Job layout and gates](issues/02-job-layout-and-gates.md): one ci.yml (backend, frontend, secrets, then docker) plus codeql.yml; PR-only merges to main with those four checks required.
 - [Findings policy](issues/03-findings-policy.md): HIGH/CRITICAL fail, exceptions need written justification; start red on default lint rules, fix, re-run; enable branch protection once green.
 
-## Not yet specified
-
-- Coverage threshold: set after the first measured value.
-- Hand-off order for implementation (which workflow first).
 
 ## Out of scope
 

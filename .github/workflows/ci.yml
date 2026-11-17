@@ -41,7 +41,7 @@ jobs:
         working-directory: backend
 
       - name: Test with coverage
-        run: uv run --frozen pytest --cov=app --cov-report=term-missing --cov-report=markdown:"$GITHUB_STEP_SUMMARY"
+        run: uv run --frozen pytest --cov=app --cov-fail-under=85 --cov-report=term-missing --cov-report=markdown:"$GITHUB_STEP_SUMMARY"
         working-directory: backend
 
       - name: Export production dependencies

@@ -14,6 +14,12 @@ export default defineConfig({
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     coverage: {
       provider: "v8",
+      thresholds: {
+        statements: 85,
+        branches: 85,
+        functions: 85,
+        lines: 85,
+      },
     },
   },
 });
