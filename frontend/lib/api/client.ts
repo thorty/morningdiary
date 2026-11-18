@@ -29,9 +29,11 @@ type HttpClientOptions = {
   fetchImpl?: typeof fetch;
 };
 
-function resolveHttpClientOptions(options: HttpClientOptions): { baseUrl: string; fetchImpl: typeof fetch } {
+function resolveHttpClientOptions(options: HttpClientOptions): { endpoint: string; fetchImpl: typeof fetch } {
   return {
-    baseUrl: options.baseUrl ?? process.env.NEXT_PUBLIC_BACKEND_BASE_URL ?? "http://localhost:8000",
+    endpoint: options.baseUrl
+      ? `${options.baseUrl.replace(/\/+$/, "")}/api/coach-summary`
+      : "/api/coach-summary",
     fetchImpl: options.fetchImpl ?? fetch,
   };
 }
@@ -63,15 +65,16 @@ async function parseJson<T>(response: Response): Promise<T> {
 export function createHttpCoachSummaryApiClient(
   options: HttpClientOptions = {},
 ): CoachSummaryApiClient {
-  const { baseUrl, fetchImpl } = resolveHttpClientOptions(options);
+  const { endpoint, fetchImpl } = resolveHttpClientOptions(options);
 
   return {
     async createCoachSummary(payload) {
-      const response = await fetchImpl(`${baseUrl}/api/coach-summary`, {
+      const response = await fetchImpl(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        cache: "no-store",
         body: JSON.stringify({
           answers: payload.answers,
           target_language: payload.target_language,

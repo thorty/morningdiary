@@ -17,6 +17,7 @@ test("sends only current answers and target language to the stateless Coach Summ
   expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/coach-summary", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    cache: "no-store",
     body: JSON.stringify({
       answers: [4, "Dankbar fuer den ruhigen Morgen", null, null, null, "Den naechsten Schritt"],
       target_language: "de",
@@ -38,6 +39,7 @@ test("returns a controlled unavailable response from the Coach Summary API", asy
       target_language: "de",
     }),
   ).resolves.toEqual({ status: "unavailable", summary: null });
+  expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/coach-summary");
 });
 
 test("does not serialize runtime fields outside the Coach Summary contract", async () => {
