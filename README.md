@@ -32,4 +32,12 @@ Stop the containers with:
 docker compose down
 ```
 
-The frontend calls the backend at `http://localhost:8000` by default. Change the `NEXT_PUBLIC_BACKEND_BASE_URL` build argument in `compose.yaml` when deploying under a different public URL.
+The browser sends optional Coach Summary requests to the frontend's same-origin
+route at `http://localhost:3000/api/coach-summary`. In Docker Compose, the
+frontend forwards these requests to the backend using
+`BACKEND_BASE_URL=http://backend:8000`; the backend remains available at
+`http://localhost:8000` for its health check and local development.
+
+When running the frontend directly with `npm run dev`, start the backend on
+port `8000` and set `BACKEND_BASE_URL=http://localhost:8000` for the frontend.
+The backend API key remains in `backend/.env` and is never sent to the browser.
